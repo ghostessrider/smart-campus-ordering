@@ -6,7 +6,7 @@ export const studentRegisterSchema = z.object({
   email: z
     .string()
     .email()
-    .endsWith("@university.edu"),
+    .endsWith("@iitbhilai.ac.in"),
 
   studentId: z.string().min(3).max(30),
 

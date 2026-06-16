@@ -4,7 +4,7 @@ import {
 
 import { auth } from "@/lib/firebase/auth";
 
-export async function emailLogin(
+export async function loginWithEmail(
   email: string,
   password: string
 ) {

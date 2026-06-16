@@ -21,52 +21,61 @@ export default function ProductCard({ id, name, description, price, imageUrl, on
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col h-full hover:shadow-md transition-shadow">
-      {/* Product Image */}
-      <div className="h-48 bg-gray-100 dark:bg-gray-700 relative">
-        {imageUrl ? (
-          <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-        )}
-        <div className="absolute top-3 left-3 bg-white dark:bg-gray-800 font-bold px-3 py-1 rounded-full text-sm shadow-sm text-gray-900 dark:text-white">
-          ₹{price}
-        </div>
-      </div>
-
-      {/* Product Info */}
-      <div className="p-5 flex-1 flex flex-col">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{name}</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 flex-1 line-clamp-2">{description}</p>
+    <div className="card-3d-wrapper h-full">
+      <div className="glass-ultra h-full flex flex-col relative overflow-hidden group card-3d">
         
-        <button 
-          onClick={handleAddToCart}
-          className={`mt-4 w-full py-2.5 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-            added 
-            ? "bg-green-500 text-white" 
-            : "bg-blue-600 hover:bg-blue-700 text-white"
-          }`}
-        >
-          {added ? (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Added to Cart
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add to Cart
-            </>
-          )}
-        </button>
+        {/* Glow Effects */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-500 rounded-full mix-blend-screen filter blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+
+        <div className="relative z-10 flex flex-col h-full card-content-3d">
+          {/* Product Image */}
+          <div className="h-48 bg-black/50 relative border-b border-white/5 overflow-hidden">
+            {imageUrl ? (
+              <img src={imageUrl} alt={name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-600 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMDUwNTA1Ij48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMxMTEiPjwvcmVjdD4KPC9zdmc+')]">
+                <svg className="w-12 h-12 text-cyan-500/30 group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_15px_rgba(0,240,255,0.8)] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            )}
+            <div className="absolute top-4 left-4 bg-cyan-400 text-black font-black px-4 py-1 rounded shadow-[0_0_15px_rgba(0,240,255,0.6)] transform -skew-x-12">
+              <span className="inline-block transform skew-x-12">₹{price}</span>
+            </div>
+          </div>
+
+          {/* Product Info */}
+          <div className="p-6 flex-1 flex flex-col">
+            <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{name}</h3>
+            <p className="text-sm text-gray-400 flex-1 line-clamp-3 mb-6 leading-relaxed font-light">{description}</p>
+            
+            <button 
+              onClick={handleAddToCart}
+              className={`w-full py-3 rounded text-sm font-black tracking-widest uppercase transition-all flex items-center justify-center gap-3 ${
+                added 
+                ? "bg-purple-600 text-white shadow-[0_0_20px_rgba(138,43,226,0.6)] border border-purple-400" 
+                : "btn-cyber"
+              }`}
+            >
+              {added ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                  ACQUIRED
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  ADD TO CART
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

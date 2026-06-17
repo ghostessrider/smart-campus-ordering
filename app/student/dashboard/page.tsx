@@ -1,56 +1,80 @@
-import StoreCard from "@/components/StoreCard";
+"use client";
 
-// Dummy Data
-const DUMMY_STORES = [
-  { id: "1", name: "Cyber Canteen", category: "Food & Snacks", rating: 4.9, deliveryTime: "10-15 min" },
-  { id: "2", name: "Neon Juice Bar", category: "Beverages", rating: 4.8, deliveryTime: "5-10 min" },
-  { id: "3", name: "Hologram Grill", category: "Fast Food", rating: 4.5, deliveryTime: "20-25 min" },
-  { id: "4", name: "Synaptic Salads", category: "Salads & Bowls", rating: 4.6, deliveryTime: "15-20 min" },
-];
+import { useState } from "react";
+import StoreCard from "@/components/StoreCard";
+import StudentNavbar from "@/components/StudentNavbar";
+import { DUMMY_STORES } from "@/data/dummyData";
 
 export default function StudentDashboard() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const categories = ["All", ...Array.from(new Set(DUMMY_STORES.map(store => store.category)))];
+
+  const filteredStores = DUMMY_STORES.filter(store => {
+    const matchesSearch = store.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || store.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="min-h-screen p-6 md:p-12 relative overflow-hidden">
-      {/* Decorative Orbs */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-purple-600 rounded-full mix-blend-screen filter blur-[50px] opacity-50 animate-pulse"></div>
-      <div className="absolute bottom-40 right-20 w-48 h-48 bg-cyan-400 rounded-full mix-blend-screen filter blur-[80px] opacity-40 animate-pulse" style={{ animationDelay: '1s' }}></div>
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-pulse" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans w-full flex flex-col items-center">
+      
+      {/* Navbar */}
+      <StudentNavbar />
 
-      {/* Header section */}
-      <header className="mb-16 relative z-10 text-center flex flex-col items-center justify-center">
-        <h1 className="text-5xl md:text-7xl font-black mb-4 gradient-text-crazy text-glow tracking-tighter" style={{ animation: 'popIn 1s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-          INITIATE ORDER SEQUENCE
-        </h1>
-        <p className="text-gray-300 text-lg md:text-xl font-light max-w-2xl mx-auto" style={{ animation: 'popIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards' }}>
-          Welcome back to the neural link. Bypass the physical queue and download your nutrients instantly.
-        </p>
-      </header>
-
-      {/* Main Content */}
-      <main className="relative z-10">
-        <div className="flex items-center justify-between mb-10 border-b border-gray-800 pb-4" style={{ animation: 'popIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s backwards' }}>
-          <h2 className="text-3xl font-bold text-white tracking-wide">
-            AVAILABLE <span className="text-cyan-400">NODES</span>
-          </h2>
-          <span className="btn-cyber px-4 py-1 rounded text-sm font-bold tracking-widest uppercase">
-            {DUMMY_STORES.length} ONLINE
-          </span>
+      <main className="max-w-7xl mx-auto px-8 md:px-16 py-12 flex flex-col items-center w-full">
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl font-bold mb-2">Campus Stores</h2>
+          <p className="text-gray-600">Browse available food vendors on campus.</p>
         </div>
 
-        {/* Store Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 animate-stagger">
-          {DUMMY_STORES.map((store) => (
-            <StoreCard 
-              key={store.id}
-              id={store.id}
-              name={store.name}
-              category={store.category}
-              rating={store.rating}
-              deliveryTime={store.deliveryTime}
-            />
-          ))}
+        {/* Search and Filters */}
+        <div className="w-full max-w-4xl mb-10 flex flex-col gap-4 items-center">
+          <input 
+            type="text" 
+            placeholder="Search stores..." 
+            className="w-full md:w-1/2 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          
+          <div className="flex flex-wrap justify-center gap-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                  selectedCategory === category 
+                    ? "bg-blue-600 text-white border-blue-600" 
+                    : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {filteredStores.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 place-items-center w-full">
+            {filteredStores.map((store) => (
+              <StoreCard 
+                key={store.id}
+                id={store.id}
+                name={store.name}
+                category={store.category}
+                rating={store.rating}
+                deliveryTime={store.deliveryTime}
+                imageUrl={store.imageUrl}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-gray-500 mt-10">No stores found matching your criteria.</div>
+        )}
       </main>
+      
     </div>
   );
 }

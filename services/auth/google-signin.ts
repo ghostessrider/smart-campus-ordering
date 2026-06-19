@@ -9,7 +9,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-import { auth } from "@/lib/firebase/auth";
+import { auth, initAuth } from "@/lib/firebase/auth";
 import { db } from "@/lib/firebase/firestore";
 
 
@@ -19,6 +19,7 @@ export async function signInStudent() {
   console.log(
     "google button clicked"
   );
+   await initAuth();
 
 
   const provider =

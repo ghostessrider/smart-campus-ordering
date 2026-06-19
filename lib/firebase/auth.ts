@@ -10,11 +10,15 @@ import { app } from "./firebase";
 export const auth = getAuth(app);
 
 
-if (typeof window !== "undefined") {
+export async function initAuth() {
 
-  setPersistence(
-    auth,
-    browserLocalPersistence
-  );
+  if (typeof window !== "undefined") {
+
+    await setPersistence(
+      auth,
+      browserLocalPersistence
+    );
+
+  }
 
 }

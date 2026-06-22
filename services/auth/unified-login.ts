@@ -17,7 +17,7 @@ import { auth, initAuth } from "@/lib/firebase/auth";
 import { db } from "@/lib/firebase/firestore";
 
 const ADMIN_EMAILS: string[] = [
-  "admin@example.com"
+  "divyansh@iitbhilai.ac.in"
 ];
 
 export async function signInUnified() {

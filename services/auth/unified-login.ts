@@ -3,6 +3,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 
+
 import {
   collection,
   query,
@@ -13,79 +14,310 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-import { auth, initAuth } from "@/lib/firebase/auth";
-import { db } from "@/lib/firebase/firestore";
 
-const ADMIN_EMAILS: string[] = [
-  "divyansh@iitbhilai.ac.in"
-];
+import {
+  auth,
+  initAuth
+} from "@/lib/firebase/auth";
 
-export async function signInUnified() {
+
+import {
+  db
+} from "@/lib/firebase/firestore";
+
+
+
+
+
+export async function signInUnified(){
+
+
+
   await initAuth();
 
-  const provider = new GoogleAuthProvider();
 
-  const result = await signInWithPopup(auth, provider);
 
-  const user = result.user;
 
-  const email = user.email?.toLowerCase();
+  const provider =
+    new GoogleAuthProvider();
 
-  if (!email) {
-    throw new Error("No email found");
+
+
+
+  const result =
+    await signInWithPopup(
+      auth,
+      provider
+    );
+
+
+
+
+  const user =
+    result.user;
+
+
+
+
+  const email =
+    user.email?.toLowerCase();
+
+
+
+
+  if(!email){
+
+
+    throw new Error(
+      "No email found"
+    );
+
+
   }
 
-  // Admin
-  if (ADMIN_EMAILS.includes(email)) {
+
+
+
+
+
+
+  /*
+    ADMIN CHECK
+  */
+
+
+  const adminQuery =
+    query(
+
+      collection(
+        db,
+        "admins"
+      ),
+
+      where(
+        "uid",
+        "==",
+        user.uid
+      )
+
+    );
+
+
+
+  const adminSnap =
+    await getDocs(
+      adminQuery
+    );
+
+
+
+  if(!adminSnap.empty){
+
+
     return {
-      role: "admin",
-      user,
+
+      role:"admin",
+
+      user
+
     };
+
+
   }
 
-  // Student
-  if (email.endsWith("@iitbhilai.ac.in")) {
-    const userRef = doc(db, "users", user.uid);
 
-    const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        role: "student",
-        email: user.email,
-        name: user.displayName,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+
+
+
+
+
+
+  /*
+    VENDOR CHECK
+  */
+
+
+  const vendorQuery =
+    query(
+
+      collection(
+        db,
+        "vendors"
+      ),
+
+      where(
+        "uid",
+        "==",
+        user.uid
+      )
+
+    );
+
+
+
+
+  const vendorSnap =
+    await getDocs(
+      vendorQuery
+    );
+
+
+
+
+  if(!vendorSnap.empty){
+
+
+
+    const vendor =
+      vendorSnap.docs[0].data();
+
+
+
+
+    if(vendor.active !== true){
+
+
+      throw new Error(
+        "Vendor account disabled"
+      );
+
+
     }
 
+
+
+
+
     return {
-      role: "student",
-      user,
+
+
+      role:"vendor",
+
+      user
+
+
     };
+
+
+
   }
 
-  // Vendor
-  const q = query(
-    collection(db, "vendors"),
-    where("email", "==", email)
+
+
+
+
+
+
+
+
+  /*
+    STUDENT CHECK
+  */
+
+
+
+  if(
+    email.endsWith(
+      "@iitbhilai.ac.in"
+    )
+  ){
+
+
+
+    const userRef =
+      doc(
+
+        db,
+
+        "users",
+
+        user.uid
+
+      );
+
+
+
+
+    const userSnap =
+      await getDoc(
+        userRef
+      );
+
+
+
+
+    if(!userSnap.exists()){
+
+
+
+      await setDoc(
+
+        userRef,
+
+        {
+
+          uid:user.uid,
+
+
+          name:
+          user.displayName || "",
+
+
+          email:
+          user.email,
+
+
+          phone:"",
+
+
+          role:"student",
+
+
+          createdAt:
+          new Date(),
+
+
+          updatedAt:
+          new Date()
+
+        }
+
+      );
+
+
+
+    }
+
+
+
+
+
+
+    return {
+
+
+      role:"student",
+
+      user
+
+
+    };
+
+
+
+  }
+
+
+
+
+
+
+
+
+  throw new Error(
+    "Access denied"
   );
 
-  const snapshot = await getDocs(q);
 
-  if (snapshot.empty) {
-    throw new Error("Not an approved vendor");
-  }
-
-  const vendor = snapshot.docs[0].data();
-
-  if (vendor.active !== true) {
-    throw new Error("Vendor account disabled");
-  }
-
-  return {
-    role: "vendor",
-    user,
-  };
 }

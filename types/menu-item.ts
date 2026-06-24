@@ -1,14 +1,11 @@
 export interface MenuItem {
   id: string;
-  storeId: string;
-  categoryId: string;
+  vendorId: string;
+  category?: string;
   name: string;
-  peripherals: string[];
-  imageUrl: string;
   price: number;
-  prepTime: number;
-  availability: boolean;
-  rating: number;
-  createdAt: Date;
-  updatedAt: Date;
+  available: boolean;
+  imageUrl?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

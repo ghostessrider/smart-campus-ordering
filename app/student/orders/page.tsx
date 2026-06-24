@@ -17,9 +17,11 @@ type StudentOrder = {
   id: string;
   orderNumber?: string;
   items: OrderItem[];
-  status: string;
+  status: "pending" | "accepted" | "completed" | "delivered" | "rejected";
   total: number;
 };
+
+const allowedStatuses = ["pending", "accepted", "completed", "delivered", "rejected"];
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<StudentOrder[]>([]);
@@ -35,7 +37,10 @@ export default function OrdersPage() {
 
       try {
         const data = await getStudentOrders(auth.currentUser.uid);
-        setOrders(data as StudentOrder[]);
+        const filtered = (data as StudentOrder[]).filter((order) =>
+          allowedStatuses.includes(order.status)
+        );
+        setOrders(filtered);
       } catch {
         setError("Unable to load your orders. Please try again.");
       } finally {

@@ -125,17 +125,19 @@ orders/{orderId}
 
 ```ts
 {
-  orderGroupId,
-  studentUid,
+  userId,
   vendorId,
-  vendorName,
+  orderNumber,
   items[],
-  status,
-  rejectionReason,
+  total,
+  status, // pending | accepted | completed | delivered | rejected
+  paymentStatus,
+  paymentUTR,
   createdAt,
-  acceptedAt,
-  readyAt,
-  completedAt
+  updatedAt,
+  acceptedAt?,
+  completedAt?,
+  deliveredAt?
 }
 ```
 

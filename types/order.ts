@@ -2,29 +2,31 @@ import { OrderStatus } from "@/constants/enums";
 
 export interface OrderItem {
   itemId: string;
-  itemName: string;
+  name: string;
+  price: number;
   quantity: number;
-  priceAtOrderTime: number;
 }
 
 export interface OrderGroup {
   id: string;
-  studentUid: string;
-  totalAmount: number;
+  userId: string;
+  total: number;
   createdAt: Date;
 }
 
 export interface VendorOrder {
   id: string;
-  orderGroupId: string;
-  studentUid: string;
+  userId: string;
   vendorId: string;
-  vendorName: string;
+  orderNumber?: string;
   items: OrderItem[];
+  total: number;
   status: OrderStatus;
-  rejectionReason?: string;
+  paymentStatus?: string;
+  paymentUTR?: string | null;
   createdAt: Date;
-  acceptedAt?: Date;
-  readyAt?: Date;
-  completedAt?: Date;
+  updatedAt?: Date;
+  acceptedAt?: Date | null;
+  completedAt?: Date | null;
+  deliveredAt?: Date | null;
 }

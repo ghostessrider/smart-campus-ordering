@@ -10,7 +10,8 @@ type Vendor = {
   name: string;
   email?: string;
   phone?: string;
-  queueNumber?: number;
+  address?: string;
+  description?: string;
 };
 
 export default function StudentDashboard() {
@@ -68,9 +69,14 @@ export default function StudentDashboard() {
                 className="group rounded-3xl border border-slate-200 bg-white p-6 transition hover:border-blue-400 hover:shadow-md"
               >
                 <h2 className="text-xl font-semibold text-slate-900">{vendor.name}</h2>
-                <p className="mt-3 text-sm text-slate-500">Email: {vendor.email}</p>
-                <p className="mt-2 text-sm text-slate-500">Phone: {vendor.phone || "Not provided"}</p>
-                <p className="mt-2 text-sm text-slate-500">Queue: {vendor.queueNumber ?? "N/A"}</p>
+                {vendor.description ? (
+                  <p className="mt-3 text-sm text-slate-500">{vendor.description}</p>
+                ) : null}
+                <div className="mt-4 space-y-2 text-sm text-slate-500">
+                  {vendor.email ? <p>Email: {vendor.email}</p> : null}
+                  {vendor.phone ? <p>Phone: {vendor.phone}</p> : null}
+                  {vendor.address ? <p>Address: {vendor.address}</p> : null}
+                </div>
                 <div className="mt-5 inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
                   Browse menu
                 </div>

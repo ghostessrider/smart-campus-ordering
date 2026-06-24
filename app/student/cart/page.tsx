@@ -12,10 +12,8 @@ import {
   updateCartQuantity,
 } from "@/services/cart/cart-store";
 import { createOrder } from "@/services/firestore/order-service";
-import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>(getCart());
   const [vendorId, setVendorId] = useState<string | null>(getCartVendorId());
   const [error, setError] = useState("");
@@ -69,7 +67,6 @@ export default function CartPage() {
       const order = {
         userId: auth.currentUser.uid,
         vendorId,
-        orderNumber: `ORD-${Date.now()}`,
         items: cart.map((item) => ({
           itemId: item.itemId,
           name: item.name,
@@ -77,13 +74,14 @@ export default function CartPage() {
           quantity: item.quantity,
         })),
         total: itemTotal,
+        status: "pending",
+        paymentStatus: "pending",
       };
 
       await createOrder(order);
       clearCart();
       refreshCart();
       setMessage("Order placed successfully.");
-      router.push("/student/orders");
     } catch {
       setError("Unable to place order. Please try again.");
     }

@@ -4,13 +4,11 @@ export type UserRole =
   | "admin";
 
 export type OrderStatus =
-  | "PLACED"
-  | "ACCEPTED"
-  | "PREPARING"
-  | "READY_FOR_PICKUP"
-  | "COMPLETED"
-  | "REJECTED"
-  | "CANCELLED";
+  | "pending"
+  | "accepted"
+  | "completed"
+  | "delivered"
+  | "rejected";
 
 export type MenuChangeType =
   | "CREATE_ITEM"

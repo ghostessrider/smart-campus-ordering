@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn, Loader2, TicketCheck, GraduationCap, Store, ShieldCheck } from "lucide-react";
+import { LogIn, Loader2 } from "lucide-react";
 
 import { signInUnified } from "@/services/auth/unified-login";
 
@@ -11,6 +11,38 @@ import { signInUnified } from "@/services/auth/unified-login";
 const APP_NAME = "SMART COW";
 // const APP_NAME = "ACE"; // full form: Kunal will share
 // const APP_NAME = "WOW"; // World of WOW
+
+// Simple flat cow-face mark — stand-in mascot until a real logo exists.
+function CowIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* ears */}
+      <ellipse cx="10" cy="24" rx="8" ry="10" fill="currentColor" opacity="0.9" />
+      <ellipse cx="54" cy="24" rx="8" ry="10" fill="currentColor" opacity="0.9" />
+      {/* head */}
+      <rect x="12" y="16" width="40" height="32" rx="16" fill="currentColor" />
+      {/* muzzle */}
+      <rect x="16" y="34" width="32" height="16" rx="8" fill="#0b0d10" opacity="0.85" />
+      {/* nostrils */}
+      <circle cx="25" cy="42" r="2.4" fill="currentColor" />
+      <circle cx="39" cy="42" r="2.4" fill="currentColor" />
+      {/* eyes */}
+      <circle cx="22" cy="27" r="2.6" fill="#0b0d10" />
+      <circle cx="42" cy="27" r="2.6" fill="#0b0d10" />
+      {/* spot */}
+      <path
+        d="M40 16c4 0 8 3 8 8s-4 6-8 4-6-5-4-8 2-4 4-4z"
+        fill="#0b0d10"
+        opacity="0.85"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -58,7 +90,7 @@ export default function LoginPage() {
       <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
         {/* eyebrow */}
         <div className="mb-7 flex items-center gap-2 text-[#9aa3ae]">
-          <TicketCheck size={16} strokeWidth={1.75} className="text-[#f2a93b]" />
+          <CowIcon className="h-4 w-4 text-[#f2a93b]" />
           <span className="font-mono text-[11px] uppercase tracking-[0.22em]">
             {APP_NAME}
           </span>
@@ -66,21 +98,14 @@ export default function LoginPage() {
 
         {/* ticket card */}
         <div className="w-full">
-          {/* top stub: order-token motif */}
-          <div className="relative rounded-t-2xl border border-b-0 border-white/10 bg-[#12151a] px-7 pt-7 pb-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#9aa3ae]/70">
-              Token No.
-            </p>
-            <p className="mt-1 font-mono text-4xl font-medium tabular-nums text-white">
-              001
-            </p>
-            <h1 className="mt-5 text-xl font-semibold text-white">
+          {/* top stub */}
+          <div className="relative rounded-t-2xl border border-b-0 border-white/10 bg-[#12151a] px-7 pt-8 pb-6">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#f2a93b]/15">
+              <CowIcon className="h-7 w-7 text-[#f2a93b]" />
+            </div>
+            <h1 className="text-xl font-semibold text-white">
               Sign in to {APP_NAME}
             </h1>
-            <p className="mt-1.5 text-sm leading-relaxed text-[#9aa3ae]">
-              One account, every counter on campus. We&apos;ll route you to
-              the right dashboard automatically.
-            </p>
           </div>
 
           {/* perforation seam */}
@@ -115,22 +140,6 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
-
-            {/* role legend */}
-            <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-5 text-[#9aa3ae]">
-              <div className="flex items-center gap-1.5">
-                <GraduationCap size={15} strokeWidth={1.75} />
-                <span className="text-[11px]">Student</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Store size={15} strokeWidth={1.75} />
-                <span className="text-[11px]">Vendor</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck size={15} strokeWidth={1.75} />
-                <span className="text-[11px]">Admin</span>
-              </div>
-            </div>
           </div>
         </div>
 

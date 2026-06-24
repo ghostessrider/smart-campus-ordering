@@ -1,62 +1,112 @@
 "use client";
 
-import { use } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import StudentNavbar from "@/components/StudentNavbar";
-import { useCart } from "@/context/CartContext";
-import { DUMMY_STORES, DUMMY_PRODUCTS } from "@/data/dummyData";
+import { getActiveVendors } from "@/services/firestore/vendor-service";
+import { getMenuItems } from "@/services/firestore/menu-service";
+import { addToCart, setCartVendorId } from "@/services/cart/cart-store";
 
-export default function StorePage({ params }: { params: Promise<{ storeId: string }> | { storeId: string } }) {
-  // Unwrap params for Next.js 15+ compatibility
-  const resolvedParams = params instanceof Promise ? use(params) : params;
-  const storeId = resolvedParams.storeId;
+type Vendor = {
+  id: string;
+  name: string;
+};
 
-  const store = DUMMY_STORES.find(s => s.id === storeId);
-  const storeName = store ? store.name : `Store #${storeId}`;
-  const products = DUMMY_PRODUCTS[storeId] || [];
-  
-  const { addToCart } = useCart();
+type MenuItem = {
+  id: string;
+  name: string;
+  category?: string;
+  price: number;
+  available: boolean;
+};
+
+export default function StorePage({ params }: { params: { storeId: string } }) {
+  const vendorId = params.storeId;
+
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    async function loadVendorMenu() {
+      try {
+        setLoading(true);
+        const [vendors, items] = await Promise.all([
+          getActiveVendors(),
+          getMenuItems(vendorId),
+        ]);
+
+        setVendor((vendors as Vendor[]).find((item) => item.id === vendorId) ?? null);
+        setMenuItems(items as MenuItem[]);
+      } catch {
+        setError("Unable to load vendor menu. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadVendorMenu();
+  }, [vendorId]);
+
+  function handleAdd(item: MenuItem) {
+    setCartVendorId(vendorId);
+    addToCart({
+      itemId: item.id,
+      name: item.name,
+      price: Number(item.price),
+      quantity: 1,
+    });
+    setMessage(`${item.name} added to cart.`);
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-20 w-full flex flex-col items-center">
-      
-      {/* Navbar */}
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <StudentNavbar showBack={true} />
 
-      <main className="max-w-7xl w-full px-8 md:px-16 py-12 flex flex-col items-center">
-        <div className="bg-white p-8 rounded border border-gray-200 mb-10 text-center w-full max-w-2xl">
-          <h1 className="text-3xl font-bold mb-2">{storeName}</h1>
-          <p className="text-gray-600">Rating: {store?.rating || 4.0} | {store?.deliveryTime || "15 mins"}</p>
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{vendor?.name ?? "Vendor Menu"}</h1>
+            <p className="mt-2 text-gray-600">
+              Add available items from this vendor to your cart.
+            </p>
+          </div>
+          <Link
+            href="/student/cart"
+            className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            View Cart
+          </Link>
         </div>
 
-        <h2 className="text-2xl font-bold mb-6 text-center w-full">Menu</h2>
-
-        {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full place-items-center">
-            {products.map((product) => (
-              <ProductCard 
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                description={product.description}
-                price={product.price}
-                onAddToCart={(id, qty) => {
-                  addToCart({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    quantity: qty,
-                    storeName: storeName
-                  });
-                }}
+        {loading ? (
+          <p className="text-gray-600">Loading menu…</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : menuItems.length === 0 ? (
+          <p className="text-gray-600">No available items found for this vendor.</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {menuItems.map((item) => (
+              <ProductCard
+                key={item.id}
+                name={item.name}
+                price={Number(item.price)}
+                available={Boolean(item.available)}
+                description={item.category}
+                onAdd={() => handleAdd(item)}
               />
             ))}
           </div>
-        ) : (
-          <p className="text-gray-500 text-center">No products found for this store.</p>
         )}
+
+        {message ? (
+          <div className="mt-8 rounded-2xl bg-green-50 p-4 text-green-700">{message}</div>
+        ) : null}
       </main>
-      
     </div>
   );
 }

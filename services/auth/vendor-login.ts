@@ -110,17 +110,19 @@ throw new Error(
 
 
 
+const vendorData = snapshot.docs[0].data();
+
 const vendor = {
-
-
-id:
-
-snapshot.docs[0].id,
-
-
-...snapshot.docs[0].data()
-
-
+  id: snapshot.docs[0].id,
+  ...(vendorData as {
+    uid?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    upiId?: string;
+    active?: boolean;
+    queueNumber?: number;
+  }),
 };
 
 

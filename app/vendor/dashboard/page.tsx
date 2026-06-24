@@ -16,12 +16,25 @@ import {
 } from "@/lib/firebase/auth";
 
 
+type VendorOrderItem = {
+  itemId: string;
+  name: string;
+  quantity: number;
+  price?: number;
+};
+
+type VendorOrder = {
+  id: string;
+  vendorId: string;
+  status: string;
+  items?: VendorOrderItem[];
+};
 
 export default function VendorDashboard(){
 
 
 const [orders,setOrders] =
-useState<any[]>([]);
+useState<VendorOrder[]>([]);
 
 
 
@@ -75,49 +88,34 @@ return;
 
 
 
-setCanteenId(
-vendor.canteenId
-);
-
-
-
+setCanteenId(vendor.id);
 
 
 const data =
 await getPendingOrders(
-vendor.canteenId
+vendor.id
 );
 
 
 
-setOrders(data);
+setOrders(data as VendorOrder[]);
 
 
 
 }
 
+useEffect(() => {
+  async function init() {
+    await loadOrders();
+  }
 
-
-
-
-
-useEffect(()=>{
-
-
-loadOrders();
-
-
-},[]);
-
-
-
-
-
+  void init();
+}, []);
 
 async function changeStatus(
-id:string,
-status:string
-){
+id: string,
+status: string
+) {
 
 
 await updateOrderStatus(
@@ -155,7 +153,7 @@ Vendor Dashboard
 
 <p className="mt-2">
 
-Canteen: {canteenId}
+Vendor ID: {canteenId}
 
 </p>
 
@@ -211,24 +209,11 @@ Items
 
 
 {
-
-order.items?.map(
-(item:any,index:number)=>(
-
-
-<p key={item.id || index}>
-
-{item.name} × {item.quantity}
-
-</p>
-
-
-)
-
-)
-
-
-
+  order.items?.map((item, index) => (
+    <p key={item.itemId || index}>
+      {item.name} × {item.quantity}
+    </p>
+  ))
 }
 
 

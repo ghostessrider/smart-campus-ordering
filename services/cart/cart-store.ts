@@ -1,53 +1,54 @@
 export type CartItem = {
-  id:string;
-  name:string;
-  price:number;
-  quantity:number;
+  itemId: string;
+  name: string;
+  price: number;
+  quantity: number;
 };
 
+let cart: CartItem[] = [];
+let selectedVendorId: string | null = null;
 
-let cart:CartItem[] = [];
-
-
-export function addToCart(
- item:CartItem
-){
-
- const existing =
- cart.find(
-  i=>i.id===item.id
- );
-
-
- if(existing){
-
-  existing.quantity += 1;
-
- }
- else{
-
-  cart.push({
-    ...item,
-    quantity:1
-  });
-
- }
-
-
+export function setCartVendorId(vendorId: string) {
+  if (selectedVendorId && selectedVendorId !== vendorId && cart.length > 0) {
+    cart = [];
+  }
+  selectedVendorId = vendorId;
 }
 
-
-
-export function getCart(){
-
- return cart;
-
+export function getCartVendorId() {
+  return selectedVendorId;
 }
 
+export function addToCart(item: CartItem) {
+  const existing = cart.find((i) => i.itemId === item.itemId);
 
+  if (existing) {
+    existing.quantity += item.quantity;
+  } else {
+    cart.push(item);
+  }
+}
 
-export function clearCart(){
+export function updateCartQuantity(itemId: string, quantity: number) {
+  const item = cart.find((i) => i.itemId === itemId);
 
- cart=[];
+  if (item) {
+    item.quantity = Math.max(1, quantity);
+  }
+}
 
+export function removeCartItem(itemId: string) {
+  cart = cart.filter((item) => item.itemId !== itemId);
+  if (cart.length === 0) {
+    selectedVendorId = null;
+  }
+}
+
+export function getCart() {
+  return cart;
+}
+
+export function clearCart() {
+  cart = [];
+  selectedVendorId = null;
 }

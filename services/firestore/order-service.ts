@@ -6,39 +6,125 @@ import {
   getDocs,
   updateDoc,
   doc,
-  serverTimestamp
+  serverTimestamp,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
 
 
 
+
+
 // STUDENT: create order
 
-export async function createOrder(order:any){
+export async function createOrder(
+  order:any
+){
 
 
-const ref = await addDoc(
+  const ref =
+  await addDoc(
 
-collection(db,"orders"),
+    collection(
+      db,
+      "orders"
+    ),
 
-{
 
-...order,
+    {
 
-createdAt: serverTimestamp(),
 
-updatedAt: serverTimestamp()
+      ...order,
+
+
+      status:"pending",
+
+
+      paymentStatus:"pending",
+
+
+      paymentUTR:null,
+
+
+      createdAt:
+      serverTimestamp(),
+
+
+      acceptedAt:null,
+
+
+      completedAt:null,
+
+
+      deliveredAt:null,
+
+
+      updatedAt:
+      serverTimestamp()
+
+
+    }
+
+  );
+
+
+
+  return ref.id;
+
 
 }
 
-);
 
 
-return ref.id;
+
+
+
+
+// STUDENT: get own orders
+
+export async function getStudentOrders(
+  userId:string
+){
+
+
+  const q =
+  query(
+
+    collection(
+      db,
+      "orders"
+    ),
+
+
+    where(
+      "userId",
+      "==",
+      userId
+    )
+
+  );
+
+
+
+  const snapshot =
+  await getDocs(q);
+
+
+
+  return snapshot.docs.map(
+    (order)=>({
+
+      id:order.id,
+
+      ...order.data()
+
+    })
+  );
 
 
 }
+
+
 
 
 
@@ -47,45 +133,54 @@ return ref.id;
 // VENDOR: get pending orders
 
 export async function getPendingOrders(
-canteenId:string
+  vendorId:string
 ){
 
 
-const q = query(
+  const q =
+  query(
 
-collection(db,"orders"),
-
-where(
-"canteenId",
-"==",
-canteenId
-),
-
-where(
-"status",
-"==",
-"pending"
-)
-
-);
+    collection(
+      db,
+      "orders"
+    ),
 
 
+    where(
+      "vendorId",
+      "==",
+      vendorId
+    ),
 
-const snapshot = await getDocs(q);
+
+    where(
+      "status",
+      "==",
+      "pending"
+    )
+
+  );
 
 
 
-return snapshot.docs.map(order => ({
+  const snapshot =
+  await getDocs(q);
 
-id:order.id,
 
-...order.data()
 
-}));
+  return snapshot.docs.map(
+    (order)=>({
 
+      id:order.id,
+
+      ...order.data()
+
+    })
+  );
 
 
 }
+
 
 
 
@@ -97,39 +192,81 @@ id:order.id,
 
 export async function updateOrderStatus(
 
-orderId:string,
+  orderId:string,
 
-status:string
+  status:string
 
 ){
 
 
-const ref = doc(
+  const ref =
+  doc(
 
-db,
+    db,
 
-"orders",
+    "orders",
 
-orderId
+    orderId
 
-);
+  );
 
 
 
-await updateDoc(
+  const updateData:any = {
 
-ref,
 
-{
+    status,
 
-status,
 
-updatedAt:serverTimestamp()
+    updatedAt:
+    serverTimestamp()
 
-}
 
-);
+  };
 
+
+
+  if(status==="accepted"){
+
+
+    updateData.acceptedAt =
+    serverTimestamp();
+
+
+  }
+
+
+
+  if(status==="completed"){
+
+
+    updateData.completedAt =
+    serverTimestamp();
+
+
+  }
+
+
+
+  if(status==="delivered"){
+
+
+    updateData.deliveredAt =
+    serverTimestamp();
+
+
+  }
+
+
+
+
+  await updateDoc(
+
+    ref,
+
+    updateData
+
+  );
 
 
 }

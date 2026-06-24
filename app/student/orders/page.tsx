@@ -1,66 +1,81 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import StudentNavbar from "@/components/StudentNavbar";
 import OrderCard from "@/components/OrderCard";
+import { auth } from "@/lib/firebase/auth";
+import { getStudentOrders } from "@/services/firestore/order-service";
 
-// Dummy Order History Data
-const DUMMY_ORDERS: React.ComponentProps<typeof OrderCard>[] = [
-  {
-    id: "1045",
-    storeName: "Nescafe",
-    date: "Oct 24, 2026, 02:30 PM",
-    status: "Completed",
-    total: 80,
-    items: [
-      { name: "Cold Coffee", quantity: 1 },
-      { name: "Masala Maggi", quantity: 1 }
-    ]
-  },
-  {
-    id: "1042",
-    storeName: "Canteen 1",
-    date: "Oct 23, 2026, 11:15 AM",
-    status: "Completed",
-    total: 140,
-    items: [
-      { name: "Masala Dosa", quantity: 1 },
-      { name: "Veg Fried Rice", quantity: 1 }
-    ]
-  },
-  {
-    id: "1047",
-    storeName: "Amul Parlour",
-    date: "Oct 24, 2026, 04:00 PM",
-    status: "Pending",
-    total: 40,
-    items: [
-      { name: "Chocolate Cone", quantity: 1 }
-    ]
-  }
-];
+type OrderItem = {
+  itemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
+
+type StudentOrder = {
+  id: string;
+  orderNumber?: string;
+  items: OrderItem[];
+  status: string;
+  total: number;
+};
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<StudentOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadOrders() {
+      if (!auth.currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getStudentOrders(auth.currentUser.uid);
+        setOrders(data as StudentOrder[]);
+      } catch {
+        setError("Unable to load your orders. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadOrders();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans w-full flex flex-col items-center">
-      
-      {/* Navbar */}
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <StudentNavbar />
 
-      <main className="max-w-7xl w-full px-8 md:px-16 py-12 flex flex-col items-center">
-        <div className="w-full max-w-3xl">
-          
-          <div className="mb-8 border-b border-gray-200 pb-4 text-center">
-            <h1 className="text-3xl font-bold">Your Orders</h1>
-            <p className="text-gray-600 mt-2">View your current and past food orders.</p>
-          </div>
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Your Orders</h1>
+          <p className="mt-2 text-gray-600">Track the status of your orders here.</p>
+        </div>
 
-          <div className="flex flex-col gap-6 w-full">
-            {DUMMY_ORDERS.map((order) => (
-              <OrderCard key={order.id} {...order} />
+        {loading ? (
+          <p className="text-gray-600">Loading orders…</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : orders.length === 0 ? (
+          <p className="text-gray-600">No orders found.</p>
+        ) : (
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <OrderCard
+                key={order.id}
+                orderId={order.orderNumber || order.id}
+                orderNumber={order.orderNumber}
+                items={order.items ?? []}
+                status={order.status}
+                price={order.total}
+              />
             ))}
           </div>
-
-        </div>
+        )}
       </main>
     </div>
   );

@@ -8,22 +8,41 @@ import {
 import { db } from "@/lib/firebase/firestore";
 
 
-export async function getMenuItems(
-  canteenId:string
-) {
 
-  const q = query(
-    collection(db,"menus"),
+export async function getMenuItems(
+  vendorId:string
+){
+
+
+  const q =
+  query(
+
+    collection(
+      db,
+      "menuItems"
+    ),
+
+
     where(
-      "canteenId",
+      "vendorId",
       "==",
-      canteenId
+      vendorId
+    ),
+
+
+    where(
+      "available",
+      "==",
+      true
     )
+
   );
 
 
+
   const snapshot =
-    await getDocs(q);
+  await getDocs(q);
+
 
 
   return snapshot.docs.map(
@@ -35,5 +54,6 @@ export async function getMenuItems(
 
     })
   );
+
 
 }

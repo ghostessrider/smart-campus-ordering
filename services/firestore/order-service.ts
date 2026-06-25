@@ -7,6 +7,7 @@ import {
   doc,
   serverTimestamp,
   runTransaction,
+  onSnapshot,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
@@ -303,4 +304,20 @@ export async function updateOrderStatus(
 
 
 
+}
+
+export function listenToVendorOrders(
+  vendorId: string,
+  callback: (orders: any[]) => void
+) {
+  const q = query(collection(db, "orders"), where("vendorId", "==", vendorId));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const orders = snapshot.docs.map((order) => ({
+      id: order.id,
+      ...order.data(),
+    }));
+    callback(orders);
+  });
+
+  return unsubscribe;
 }

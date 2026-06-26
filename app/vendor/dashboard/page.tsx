@@ -29,7 +29,7 @@ import { VendorOrder } from "@/types/order";
 
 type Column = "incoming" | "preparing" | "ready";
 
-const COLUMN_META: Record
+const COLUMN_META: Record <
   Column,
   { label: string; description: string; accent: string }
 > = {

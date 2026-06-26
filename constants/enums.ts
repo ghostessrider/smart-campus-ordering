@@ -8,7 +8,8 @@ export type OrderStatus =
   | "accepted"
   | "completed"
   | "delivered"
-  | "rejected";
+  | "rejected"
+  | "cancelled";
 
 export type MenuChangeType =
   | "CREATE_ITEM"

@@ -24,6 +24,7 @@ export interface VendorOrder {
   status: OrderStatus;
   paymentStatus?: string;
   paymentUTR?: string | null;
+  rejectionReason?: string | null;
   createdAt: Date;
   updatedAt?: Date;
   acceptedAt?: Date | null;

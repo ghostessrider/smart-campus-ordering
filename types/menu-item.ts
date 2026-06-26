@@ -3,9 +3,10 @@ export interface MenuItem {
   vendorId: string;
   category?: string;
   name: string;
+  description?: string;
   price: number;
   available: boolean;
-  imageUrl?: string;
+  image?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -1,0 +1,83 @@
+rules_version = '2';
+
+// NOTE: No firestore.rules file existed in this repo before this change —
+// this is a first draft covering the collections currently in use plus the
+// two new write paths added with the vendor dashboard rebuild (store status
+// toggle, order rejection with reason). Review with the team before
+// deploying — this has not been tested against the Firebase emulator.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isOwnUser() {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // users/{uid}
+    match /users/{userId} {
+      allow read: if isOwnUser() || isAdmin();
+      allow create: if isOwnUser();
+      allow update: if isOwnUser() || isAdmin();
+      allow delete: if false;
+    }
+
+    // admins/{uid} — hardcoded, never written from the client
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // vendors/{vendorId}
+    match /vendors/{vendorId} {
+      allow read: if isSignedIn();
+
+      // Only admin creates vendors.
+      allow create: if isAdmin();
+
+      // Vendor can update ONLY their own doc, and only the `status` field
+      // (the open/closed toggle added today). Anything else — name, upiID,
+      // rating, etc. — stays admin-only until a separate flow exists for it.
+      allow update: if isAdmin() ||
+        (isSignedIn() &&
+         resource.data.email == request.auth.token.email &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status']));
+
+      allow delete: if isAdmin();
+    }
+
+    // menuItems/{itemId}
+    match /menuItems/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin(); // vendor menu-write rules to be added separately
+    }
+
+    // orders/{orderId}
+    match /orders/{orderId} {
+      allow read: if isSignedIn(); // tighten to owner/vendor/admin once auth claims for vendor are in place
+      allow create: if isSignedIn();
+
+      // Vendor rejecting a pending order: allowed to set status + rejectionReason only.
+      allow update: if isAdmin() ||
+        (isSignedIn() &&
+         resource.data.status == 'pending' &&
+         request.resource.data.status == 'rejected' &&
+         request.resource.data.rejectionReason is string &&
+         request.resource.data.rejectionReason.size() > 0) ||
+        (isSignedIn() &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'updatedAt', 'acceptedAt', 'completedAt', 'deliveredAt']));
+
+      allow delete: if false;
+    }
+  }
+}

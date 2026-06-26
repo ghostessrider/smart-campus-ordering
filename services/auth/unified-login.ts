@@ -147,9 +147,9 @@ export async function signInUnified(){
       ),
 
       where(
-        "uid",
+        "email",
         "==",
-        user.uid
+        email
       )
 
     );
@@ -168,31 +168,20 @@ export async function signInUnified(){
   if(!vendorSnap.empty){
 
 
+    const vendorDoc =
+      vendorSnap.docs[0];
 
-    const vendor =
-      vendorSnap.docs[0].data();
-
-
-
-
-    if(vendor.active !== true){
-
-
-      throw new Error(
-        "Vendor account disabled"
-      );
-
-
-    }
-
-
-
-
+    // NOTE: schema has no account-suspension flag for vendors today —
+    // `status` is open/closed for the *store*, not the account, so a
+    // closed store can still log in to reopen itself. If account-level
+    // suspension is ever needed, that is a separate schema decision.
 
     return {
 
 
       role:"vendor",
+
+      vendorId: vendorDoc.id,
 
       user
 
@@ -307,7 +296,6 @@ export async function signInUnified(){
 
 
   }
-
 
 
 

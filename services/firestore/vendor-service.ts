@@ -3,9 +3,12 @@ import {
   getDocs,
   query,
   where,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
+import { Vendor } from "@/types/vendor";
 
 
 
@@ -25,9 +28,9 @@ export async function getActiveVendors(){
 
 
     where(
-      "active",
+      "status",
       "==",
-      true
+      "open"
     )
 
   );
@@ -60,7 +63,7 @@ export async function getActiveVendors(){
 
 export async function getVendorByEmail(
   email:string
-){
+): Promise<Vendor | null> {
 
 
   const q =
@@ -101,7 +104,18 @@ export async function getVendorByEmail(
 
     ...snapshot.docs[0].data()
 
-  };
+  } as Vendor;
 
 
+}
+
+// VENDOR: toggle own store open/closed.
+// Writes to the existing `status` field on the vendor's own doc only —
+// does not introduce a separate isOpen flag, to keep one source of truth.
+export async function setVendorStoreStatus(
+  vendorId: string,
+  status: "open" | "closed"
+) {
+  const ref = doc(db, "vendors", vendorId);
+  await updateDoc(ref, { status });
 }

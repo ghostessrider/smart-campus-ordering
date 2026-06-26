@@ -12,6 +12,7 @@ import {
 
 import { db } from "@/lib/firebase/firestore";
 import { OrderStatus } from "@/constants/enums";
+import { VendorOrder } from "@/types/order";
 
 
 
@@ -67,6 +68,38 @@ export async function createOrder(order: CreateOrderPayload) {
   });
 
   return orderRef.id;
+}
+
+// STUDENT: cancel own order — only allowed while status is still "pending",
+// i.e. before the vendor has accepted it. Enforced here via a transaction
+// read-check, not just trusted from the client.
+export async function cancelOrder(orderId: string, userId: string) {
+  const ref = doc(db, "orders", orderId);
+
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+
+    if (!snapshot.exists()) {
+      throw new Error("Order not found.");
+    }
+
+    const orderData = snapshot.data();
+
+    if (orderData.userId !== userId) {
+      throw new Error("You can only cancel your own orders.");
+    }
+
+    if (orderData.status !== "pending") {
+      throw new Error(
+        "This order has already been accepted and can no longer be cancelled."
+      );
+    }
+
+    transaction.update(ref, {
+      status: "cancelled",
+      updatedAt: serverTimestamp(),
+    });
+  });
 }
 
 // STUDENT: get own orders
@@ -273,7 +306,7 @@ export async function getCompletedOrders(
 
 export async function updateOrderStatus(
   orderId: string,
-  status: Exclude<OrderStatus, "pending">
+  status: Exclude<OrderStatus, "pending" | "rejected">
 ) {
   const ref = doc(db, "orders", orderId);
 
@@ -301,21 +334,37 @@ export async function updateOrderStatus(
   }
 
   await updateDoc(ref, updateData);
+}
 
+// VENDOR: reject a pending order with a required reason.
+// Kept separate from updateOrderStatus since rejection always needs
+// rejectionReason — this is enforced here, not left optional.
+export async function rejectOrder(orderId: string, reason: string) {
+  const trimmedReason = reason.trim();
 
+  if (!trimmedReason) {
+    throw new Error("A rejection reason is required.");
+  }
 
+  const ref = doc(db, "orders", orderId);
+
+  await updateDoc(ref, {
+    status: "rejected",
+    rejectionReason: trimmedReason,
+    updatedAt: serverTimestamp(),
+  });
 }
 
 export function listenToVendorOrders(
   vendorId: string,
-  callback: (orders: any[]) => void
+  callback: (orders: VendorOrder[]) => void
 ) {
   const q = query(collection(db, "orders"), where("vendorId", "==", vendorId));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const orders = snapshot.docs.map((order) => ({
       id: order.id,
       ...order.data(),
-    }));
+    })) as VendorOrder[];
     callback(orders);
   });
 

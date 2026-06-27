@@ -60,10 +60,10 @@ export default function StudentOrdersPage() {
           })
         );
 
-          // preload feedback existence for delivered orders
+          // preload feedback existence for completed or delivered orders
           await Promise.all(
             fetched.map(async (o) => {
-              if (o.status === "delivered") {
+              if (o.status === "completed" || o.status === "delivered") {
                 try {
                   const mod = await import("@/services/firestore/feedback-service");
                   const fbMod = (await mod.getFeedbackByOrderId(o.id)) as { rating?: number; comment?: string } | null;
@@ -159,7 +159,7 @@ export default function StudentOrdersPage() {
                   </div>
                 </div>
 
-                {order.status === "delivered" && (
+                {(order.status === "completed" || order.status === "delivered") && (
                   <div className="mt-4 border-t border-slate-800 pt-4">
                     {feedbackMap[order.id] ? (
                       <div className="text-sm text-emerald-300">You already reviewed this order. Thanks!</div>

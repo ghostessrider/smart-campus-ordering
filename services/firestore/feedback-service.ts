@@ -5,6 +5,8 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
@@ -26,6 +28,18 @@ export async function getFeedbackByOrderId(orderId: string) {
 }
 
 export async function createFeedback(payload: FeedbackPayload) {
+  const orderRef = doc(db, "orders", payload.orderId);
+  const orderSnap = await getDoc(orderRef);
+
+  if (!orderSnap.exists()) {
+    throw new Error("Order not found.");
+  }
+
+  const status = orderSnap.get("status");
+  if (status !== "completed" && status !== "delivered") {
+    throw new Error("Only completed or delivered orders can be reviewed.");
+  }
+
   // simple existence check to avoid duplicate reviews for same order
   const existing = await getFeedbackByOrderId(payload.orderId);
   if (existing) {

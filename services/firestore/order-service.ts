@@ -69,6 +69,12 @@ export async function createOrder(order: CreateOrderPayload) {
 // STUDENT: cancel own order — only allowed while status is still "pending",
 // i.e. before the vendor has accepted it. Enforced here via a transaction
 // read-check, not just trusted from the client.
+//
+// NOTE: only 5 statuses are confirmed (pending/accepted/completed/
+// delivered/rejected) — there is no "cancelled" status. A student
+// cancellation is recorded as "rejected" with rejectionReason set to a
+// fixed marker so the dashboard can still tell it apart from a vendor
+// rejection if needed.
 export async function cancelOrder(orderId: string, userId: string) {
   const ref = doc(db, "orders", orderId);
 
@@ -92,7 +98,8 @@ export async function cancelOrder(orderId: string, userId: string) {
     }
 
     transaction.update(ref, {
-      status: "cancelled",
+      status: "rejected",
+      rejectionReason: "Cancelled by student",
       updatedAt: serverTimestamp(),
     });
   });
@@ -310,8 +317,6 @@ export async function updateOrderStatus(
     status: string;
     updatedAt: ReturnType<typeof serverTimestamp>;
     acceptedAt?: ReturnType<typeof serverTimestamp>;
-    preparingAt?: ReturnType<typeof serverTimestamp>;
-    readyAt?: ReturnType<typeof serverTimestamp>;
     completedAt?: ReturnType<typeof serverTimestamp>;
     deliveredAt?: ReturnType<typeof serverTimestamp>;
   } = {
@@ -321,14 +326,6 @@ export async function updateOrderStatus(
 
   if (status === "accepted") {
     updateData.acceptedAt = serverTimestamp();
-  }
-
-  if (status === "preparing") {
-    updateData.preparingAt = serverTimestamp();
-  }
-
-  if (status === "ready_for_pickup") {
-    updateData.readyAt = serverTimestamp();
   }
 
   if (status === "completed") {

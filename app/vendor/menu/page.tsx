@@ -24,10 +24,12 @@ import {
   deleteVendorCategory,
 } from "@/services/firestore/menu-service";
 import { getVendorByEmail } from "@/services/firestore/vendor-service";
-import {
-  isWithinSetupWindow,
-  requestPriceChange,
-} from "@/services/firestore/menu-governance-service";
+// GOVERNANCE FEATURE — disabled for now per Divyansh (27 June), admin side
+// has no UI yet to review requests. Code kept for when it's re-enabled.
+// import {
+//   isWithinSetupWindow,
+//   requestPriceChange,
+// } from "@/services/firestore/menu-governance-service";
 import { auth } from "@/lib/firebase/auth";
 import { Vendor } from "@/types/vendor";
 import { MenuItem } from "@/types/menu-item";
@@ -41,7 +43,8 @@ export default function VendorMenuPage() {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<MenuItem | "new" | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [pendingNotice, setPendingNotice] = useState<string | null>(null);
+  // GOVERNANCE FEATURE — disabled for now, see imports above.
+  // const [pendingNotice, setPendingNotice] = useState<string | null>(null);
 
   async function loadMenu(vendorId: string) {
     const [menuItems, vendorCategories] = await Promise.all([
@@ -103,30 +106,33 @@ export default function VendorMenuPage() {
     if (editingItem === "new") {
       await createMenuItem({ vendorId: vendor.id, ...values });
     } else if (editingItem) {
-      const priceChanged = values.price !== editingItem.price;
-      const withinWindow = isWithinSetupWindow(vendor);
+      // GOVERNANCE FEATURE — disabled for now (see import above). When
+      // re-enabled, restore this branch instead of the plain
+      // updateMenuItem call below.
+      //
+      // const priceChanged = values.price !== editingItem.price;
+      // const withinWindow = isWithinSetupWindow(vendor);
+      //
+      // if (priceChanged && !withinWindow) {
+      //   await requestPriceChange({
+      //     vendorId: vendor.id,
+      //     menuItemId: editingItem.id,
+      //     currentPrice: editingItem.price,
+      //     requestedPrice: values.price,
+      //   });
+      //   await updateMenuItem(editingItem.id, {
+      //     name: values.name,
+      //     description: values.description,
+      //     category: values.category,
+      //   });
+      //   setPendingNotice(
+      //     `Price change for "${values.name}" sent for admin approval. Other changes saved.`
+      //   );
+      // } else {
+      //   await updateMenuItem(editingItem.id, values);
+      // }
 
-      if (priceChanged && !withinWindow) {
-        // Outside the 3-day setup window: price changes need admin
-        // approval. Everything else (name, description, category) still
-        // saves immediately — only the price field is held back.
-        await requestPriceChange({
-          vendorId: vendor.id,
-          menuItemId: editingItem.id,
-          currentPrice: editingItem.price,
-          requestedPrice: values.price,
-        });
-        await updateMenuItem(editingItem.id, {
-          name: values.name,
-          description: values.description,
-          category: values.category,
-        });
-        setPendingNotice(
-          `Price change for "${values.name}" sent for admin approval. Other changes saved.`
-        );
-      } else {
-        await updateMenuItem(editingItem.id, values);
-      }
+      await updateMenuItem(editingItem.id, values);
     }
 
     setEditingItem(null);
@@ -192,6 +198,7 @@ export default function VendorMenuPage() {
           </div>
         </div>
 
+        {/* GOVERNANCE FEATURE — disabled for now, see imports above.
         {pendingNotice && (
           <div className="mt-4 flex items-start justify-between gap-3 rounded-lg border border-[#f2a93b]/25 bg-[#f2a93b]/10 px-4 py-3 text-sm text-[#f2a93b]">
             <span>{pendingNotice}</span>
@@ -210,6 +217,7 @@ export default function VendorMenuPage() {
             items now need admin approval before they go live.
           </p>
         )}
+        */}
 
         <div className="mt-8 space-y-8">
           {Array.from(groupedByCategory.entries()).map(

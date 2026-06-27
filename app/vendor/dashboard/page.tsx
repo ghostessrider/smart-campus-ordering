@@ -9,7 +9,6 @@ import {
   Check,
   X,
   Clock,
-  ChefHat,
   PackageCheck,
   Star,
   IndianRupee,
@@ -29,9 +28,8 @@ import {
 import { auth } from "@/lib/firebase/auth";
 import { Vendor } from "@/types/vendor";
 import { VendorOrder } from "@/types/order";
-import { OrderStatus } from "@/constants/enums";
 
-type Column = "incoming" | "preparing" | "ready" | "delivered";
+type Column = "incoming" | "preparing" | "ready";
 
 const COLUMN_META: Record
   Column,
@@ -51,11 +49,6 @@ const COLUMN_META: Record
     label: "Ready for pickup",
     description: "Call the token number out",
     accent: "#3ddc84",
-  },
-  delivered: {
-    label: "Delivered",
-    description: "Picked up, done",
-    accent: "#9aa3ae",
   },
 };
 
@@ -96,28 +89,28 @@ export default function VendorDashboard() {
     };
   }, []);
 
-  // Incoming = pending. Preparing covers both "accepted" (just accepted,
-  // not started yet) and "preparing" (actively being made) — they sit in
-  // the same column since both mean "in the kitchen, not ready yet", but
-  // each gets its own status-specific action button so the underlying
-  // stage is still tracked precisely in the database.
+  // Only 5 statuses exist: pending, accepted, completed, delivered, rejected.
+  // "Ready for pickup" maps to "completed" — that is the status meaning
+  // "vendor has finished making it, ready to be picked up." Delivered
+  // orders are folded into the closed log alongside rejected, since there
+  // is no separate column for them on this 3-column board.
   const incoming = orders.filter((o) => o.status === "pending");
-  const preparing = orders.filter(
-    (o) => o.status === "accepted" || o.status === "preparing"
-  );
-  const ready = orders.filter((o) => o.status === "ready_for_pickup");
-  const delivered = orders.filter(
-    (o) => o.status === "delivered" || o.status === "completed"
-  );
+  const preparing = orders.filter((o) => o.status === "accepted");
+  const ready = orders.filter((o) => o.status === "completed");
   const closedLog = orders.filter(
-    (o) => o.status === "rejected" || o.status === "cancelled"
+    (o) => o.status === "rejected" || o.status === "delivered"
   );
 
-  async function handleStatusChange(
-    order: VendorOrder,
-    status: Exclude<OrderStatus, "pending" | "rejected">
-  ) {
-    await updateOrderStatus(order.id, status);
+  async function handleAccept(order: VendorOrder) {
+    await updateOrderStatus(order.id, "accepted");
+  }
+
+  async function handleMarkReady(order: VendorOrder) {
+    await updateOrderStatus(order.id, "completed");
+  }
+
+  async function handleMarkDelivered(order: VendorOrder) {
+    await updateOrderStatus(order.id, "delivered");
   }
 
   async function handleConfirmReject(reason: string) {
@@ -158,7 +151,7 @@ export default function VendorDashboard() {
 
   return (
     <main className="min-h-screen bg-[#0b0d10] px-6 py-10 lg:px-10">
-      <div className="mx-auto max-w-[1600px]">
+      <div className="mx-auto max-w-7xl">
         <VendorHeader
           vendor={vendor}
           toggling={togglingStore}
@@ -167,14 +160,14 @@ export default function VendorDashboard() {
           onShowClosedLog={() => setShowClosedLog(true)}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
           <OrderColumn
             column="incoming"
             orders={incoming}
             renderActions={(order) => (
               <div className="flex gap-2.5">
                 <button
-                  onClick={() => handleStatusChange(order, "accepted")}
+                  onClick={() => handleAccept(order)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f2a93b] py-2.5 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c]"
                 >
                   <Check size={15} strokeWidth={2.25} />
@@ -193,25 +186,15 @@ export default function VendorDashboard() {
           <OrderColumn
             column="preparing"
             orders={preparing}
-            renderActions={(order) =>
-              order.status === "accepted" ? (
-                <button
-                  onClick={() => handleStatusChange(order, "preparing")}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
-                >
-                  <ChefHat size={15} strokeWidth={2.25} />
-                  Start preparing
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleStatusChange(order, "ready_for_pickup")}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
-                >
-                  <PackageCheck size={15} strokeWidth={2.25} />
-                  Ready for pickup
-                </button>
-              )
-            }
+            renderActions={(order) => (
+              <button
+                onClick={() => handleMarkReady(order)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
+              >
+                <PackageCheck size={15} strokeWidth={2.25} />
+                Ready for pickup
+              </button>
+            )}
           />
 
           <OrderColumn
@@ -219,7 +202,7 @@ export default function VendorDashboard() {
             orders={ready}
             renderActions={(order) => (
               <button
-                onClick={() => handleStatusChange(order, "delivered")}
+                onClick={() => handleMarkDelivered(order)}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#3ddc84] py-2.5 text-sm font-semibold text-[#06281a] transition-colors hover:bg-[#5ee69c]"
               >
                 <Check size={15} strokeWidth={2.25} />
@@ -227,8 +210,6 @@ export default function VendorDashboard() {
               </button>
             )}
           />
-
-          <OrderColumn column="delivered" orders={delivered} renderActions={() => null} />
         </div>
       </div>
 
@@ -311,7 +292,7 @@ function VendorHeader({
           className="flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-[#9aa3ae] transition-colors hover:bg-white/15 hover:text-white"
         >
           <History size={14} strokeWidth={1.75} />
-          Cancelled / rejected
+          Delivered / rejected
           {closedLogCount > 0 && (
             <span className="rounded-full bg-white/15 px-1.5 text-[10px]">
               {closedLogCount}
@@ -547,7 +528,7 @@ function ClosedOrdersLog({
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12151a] p-6">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-white">
-            Cancelled &amp; rejected orders
+            Delivered &amp; rejected orders
           </h3>
           <button
             onClick={onClose}
@@ -577,13 +558,11 @@ function ClosedOrdersLog({
                       "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                       order.status === "rejected"
                         ? "bg-red-500/15 text-red-300"
-                        : "bg-white/10 text-[#9aa3ae]"
+                        : "bg-[#3ddc84]/15 text-[#3ddc84]"
                     )}
                   >
                     <Ban size={11} />
-                    {order.status === "rejected"
-                      ? "Rejected by you"
-                      : "Cancelled by student"}
+                    {order.status === "rejected" ? "Rejected" : "Delivered"}
                   </span>
                 </div>
                 {order.status === "rejected" && order.rejectionReason && (

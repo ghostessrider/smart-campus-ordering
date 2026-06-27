@@ -75,9 +75,7 @@ export async function getVendorMenuChangeRequests(
 }
 
 // ADMIN: see every pending request across all vendors.
-export async function getPendingMenuChangeRequests(): Promise
-  MenuChangeRequest[]
-> {
+export async function getPendingMenuChangeRequests(): Promise<MenuChangeRequest[]> {
   const q = query(
     collection(db, "menuChangeRequests"),
     where("status", "==", "PENDING")
@@ -93,7 +91,6 @@ export async function getPendingMenuChangeRequests(): Promise
       }) as MenuChangeRequest
   );
 }
-
 // ADMIN: approve a price-change request — this is the ONLY place that
 // actually writes the new price to the live menuItems document. A
 // request approved with no corresponding write would silently do

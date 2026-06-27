@@ -147,9 +147,9 @@ export async function signInUnified(){
       ),
 
       where(
-        "email",
+        "uid",
         "==",
-        email
+        user.uid
       )
 
     );

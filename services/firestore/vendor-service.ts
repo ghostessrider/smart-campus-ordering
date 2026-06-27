@@ -12,101 +12,49 @@ import { Vendor } from "@/types/vendor";
 
 
 
+// STUDENT: get vendors, optionally filtering to only active entries.
+export async function getVendors(activeOnly = true) {
+  const vendorCollection = collection(db, "vendors");
+  const q = activeOnly
+    ? query(vendorCollection, where("active", "==", true))
+    : query(vendorCollection);
 
-// STUDENT: get all active vendors
-
-export async function getActiveVendors(){
-
-
-  const q =
-  query(
-
-    collection(
-      db,
-      "vendors"
-    ),
-
-
-    where(
-      "status",
-      "==",
-      "open"
-    )
-
-  );
-
-
-
-  const snapshot =
-  await getDocs(q);
-
-
+  const snapshot = await getDocs(q);
 
   return snapshot.docs.map(
-    (vendor)=>({
-
-      id:vendor.id,
-
-      ...vendor.data()
-
-    })
+    (vendor) => ({
+      id: vendor.id,
+      ...vendor.data(),
+    } as Vendor)
   );
+}
 
-
+// STUDENT: get all active vendors
+export async function getActiveVendors() {
+  return getVendors(true);
 }
 
 
 
-
-
 // AUTH / VENDOR: get vendor by email
-
 export async function getVendorByEmail(
-  email:string
+  email: string
 ): Promise<Vendor | null> {
-
-
-  const q =
-  query(
-
-    collection(
-      db,
-      "vendors"
-    ),
-
-
-    where(
-      "email",
-      "==",
-      email
-    )
-
+  const q = query(
+    collection(db, "vendors"),
+    where("email", "==", email)
   );
 
+  const snapshot = await getDocs(q);
 
-
-  const snapshot =
-  await getDocs(q);
-
-
-
-  if(snapshot.empty){
-
+  if (snapshot.empty) {
     return null;
-
   }
 
-
-
   return {
-
-    id:snapshot.docs[0].id,
-
-    ...snapshot.docs[0].data()
-
+    id: snapshot.docs[0].id,
+    ...snapshot.docs[0].data(),
   } as Vendor;
-
-
 }
 
 // VENDOR: toggle own store open/closed.

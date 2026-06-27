@@ -5,6 +5,7 @@ import {
   where,
   doc,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
@@ -32,6 +33,15 @@ export async function getVendors(activeOnly = true) {
 // STUDENT: get all active vendors
 export async function getActiveVendors() {
   return getVendors(true);
+}
+
+
+// Get a single vendor by id
+export async function getVendorById(vendorId: string): Promise<Vendor | null> {
+  const ref = doc(db, "vendors", vendorId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Vendor;
 }
 
 

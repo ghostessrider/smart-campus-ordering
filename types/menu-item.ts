@@ -7,6 +7,9 @@ export interface MenuItem {
   price: number;
   available: boolean;
   image?: string;
+  imageURL?: string;
+  avgPrepTime?: number;
+  rating?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

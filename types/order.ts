@@ -28,6 +28,8 @@ export interface VendorOrder {
   createdAt: Date;
   updatedAt?: Date;
   acceptedAt?: Date | null;
+  preparingAt?: Date | null;
+  readyAt?: Date | null;
   completedAt?: Date | null;
   deliveredAt?: Date | null;
 }

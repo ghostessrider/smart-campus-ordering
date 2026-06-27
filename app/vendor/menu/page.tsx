@@ -10,6 +10,8 @@ import {
   ImageOff,
   Tag,
   X,
+  Settings2,
+  Trash2,
 } from "lucide-react";
 
 import {
@@ -18,8 +20,14 @@ import {
   updateMenuItem,
   setMenuItemAvailability,
   getVendorCategories,
+  renameVendorCategory,
+  deleteVendorCategory,
 } from "@/services/firestore/menu-service";
 import { getVendorByEmail } from "@/services/firestore/vendor-service";
+import {
+  isWithinSetupWindow,
+  requestPriceChange,
+} from "@/services/firestore/menu-governance-service";
 import { auth } from "@/lib/firebase/auth";
 import { Vendor } from "@/types/vendor";
 import { MenuItem } from "@/types/menu-item";
@@ -32,6 +40,8 @@ export default function VendorMenuPage() {
   const [categories, setCategories] = useState<string[]>([UNCATEGORIZED]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<MenuItem | "new" | null>(null);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [pendingNotice, setPendingNotice] = useState<string | null>(null);
 
   async function loadMenu(vendorId: string) {
     const [menuItems, vendorCategories] = await Promise.all([
@@ -93,10 +103,45 @@ export default function VendorMenuPage() {
     if (editingItem === "new") {
       await createMenuItem({ vendorId: vendor.id, ...values });
     } else if (editingItem) {
-      await updateMenuItem(editingItem.id, values);
+      const priceChanged = values.price !== editingItem.price;
+      const withinWindow = isWithinSetupWindow(vendor);
+
+      if (priceChanged && !withinWindow) {
+        // Outside the 3-day setup window: price changes need admin
+        // approval. Everything else (name, description, category) still
+        // saves immediately — only the price field is held back.
+        await requestPriceChange({
+          vendorId: vendor.id,
+          menuItemId: editingItem.id,
+          currentPrice: editingItem.price,
+          requestedPrice: values.price,
+        });
+        await updateMenuItem(editingItem.id, {
+          name: values.name,
+          description: values.description,
+          category: values.category,
+        });
+        setPendingNotice(
+          `Price change for "${values.name}" sent for admin approval. Other changes saved.`
+        );
+      } else {
+        await updateMenuItem(editingItem.id, values);
+      }
     }
 
     setEditingItem(null);
+    await loadMenu(vendor.id);
+  }
+
+  async function handleRenameCategory(oldName: string, newName: string) {
+    if (!vendor) return;
+    await renameVendorCategory(vendor.id, oldName, newName);
+    await loadMenu(vendor.id);
+  }
+
+  async function handleDeleteCategory(name: string) {
+    if (!vendor) return;
+    await deleteVendorCategory(vendor.id, name);
     await loadMenu(vendor.id);
   }
 
@@ -129,14 +174,42 @@ export default function VendorMenuPage() {
               {categories.length} categor{categories.length === 1 ? "y" : "ies"}
             </p>
           </div>
-          <button
-            onClick={() => setEditingItem("new")}
-            className="flex items-center gap-1.5 rounded-lg bg-[#f2a93b] px-4 py-2.5 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c]"
-          >
-            <Plus size={16} strokeWidth={2.25} />
-            Add item
-          </button>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setShowCategoryManager(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-semibold text-[#9aa3ae] transition-colors hover:bg-white/5 hover:text-white"
+            >
+              <Settings2 size={16} strokeWidth={1.75} />
+              Categories
+            </button>
+            <button
+              onClick={() => setEditingItem("new")}
+              className="flex items-center gap-1.5 rounded-lg bg-[#f2a93b] px-4 py-2.5 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c]"
+            >
+              <Plus size={16} strokeWidth={2.25} />
+              Add item
+            </button>
+          </div>
         </div>
+
+        {pendingNotice && (
+          <div className="mt-4 flex items-start justify-between gap-3 rounded-lg border border-[#f2a93b]/25 bg-[#f2a93b]/10 px-4 py-3 text-sm text-[#f2a93b]">
+            <span>{pendingNotice}</span>
+            <button
+              onClick={() => setPendingNotice(null)}
+              className="text-[#f2a93b]/70 hover:text-[#f2a93b]"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {vendor && !isWithinSetupWindow(vendor) && (
+          <p className="mt-4 text-xs text-[#9aa3ae]">
+            Your 3-day setup window has ended — price changes on existing
+            items now need admin approval before they go live.
+          </p>
+        )}
 
         <div className="mt-8 space-y-8">
           {Array.from(groupedByCategory.entries()).map(
@@ -180,6 +253,21 @@ export default function VendorMenuPage() {
           categories={categories}
           onCancel={() => setEditingItem(null)}
           onSave={handleSave}
+        />
+      )}
+
+      {showCategoryManager && (
+        <CategoryManager
+          categories={categories}
+          itemCounts={Object.fromEntries(
+            Array.from(groupedByCategory.entries()).map(([c, i]) => [
+              c,
+              i.length,
+            ])
+          )}
+          onClose={() => setShowCategoryManager(false)}
+          onRename={handleRenameCategory}
+          onDelete={handleDeleteCategory}
         />
       )}
     </main>
@@ -385,6 +473,150 @@ function MenuItemEditor({
             {item ? "Save changes" : "Add item"}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CategoryManager({
+  categories,
+  itemCounts,
+  onClose,
+  onRename,
+  onDelete,
+}: {
+  categories: string[];
+  itemCounts: Record<string, number>;
+  onClose: () => void;
+  onRename: (oldName: string, newName: string) => Promise<void>;
+  onDelete: (name: string) => Promise<void>;
+}) {
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+
+  async function handleRenameSubmit(oldName: string) {
+    if (!draftName.trim() || draftName.trim() === oldName) {
+      setEditingName(null);
+      return;
+    }
+    setBusyAction(oldName);
+    try {
+      await onRename(oldName, draftName.trim());
+    } finally {
+      setBusyAction(null);
+      setEditingName(null);
+    }
+  }
+
+  async function handleDeleteClick(name: string) {
+    setBusyAction(name);
+    try {
+      await onDelete(name);
+    } finally {
+      setBusyAction(null);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#12151a] p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold text-white">
+            Manage categories
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-[#9aa3ae] hover:bg-white/10 hover:text-white"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-[#9aa3ae]">
+          Renaming moves every item to the new name. Deleting moves items
+          back to Uncategorized — nothing is removed from the menu.
+        </p>
+
+        <div className="mt-4 max-h-[50vh] space-y-2 overflow-y-auto">
+          {categories.map((category) => {
+            const isUncategorized = category === "Uncategorized";
+            const isEditing = editingName === category;
+            const isBusy = busyAction === category;
+
+            return (
+              <div
+                key={category}
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0b0d10] px-3 py-2.5"
+              >
+                {isEditing ? (
+                  <input
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRenameSubmit(category);
+                      if (e.key === "Escape") setEditingName(null);
+                    }}
+                    autoFocus
+                    className="flex-1 rounded-md border border-[#f2a93b]/50 bg-[#12151a] px-2 py-1 text-sm text-white focus:outline-none"
+                  />
+                ) : (
+                  <span className="flex-1 text-sm text-white">
+                    {category}{" "}
+                    <span className="text-xs text-[#9aa3ae]">
+                      ({itemCounts[category] ?? 0})
+                    </span>
+                  </span>
+                )}
+
+                {!isUncategorized && (
+                  <div className="flex items-center gap-1">
+                    {isEditing ? (
+                      <button
+                        onClick={() => handleRenameSubmit(category)}
+                        disabled={isBusy}
+                        className="rounded-md p-1.5 text-[#3ddc84] hover:bg-white/10 disabled:opacity-50"
+                      >
+                        {isBusy ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Tag size={14} />
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingName(category);
+                          setDraftName(category);
+                        }}
+                        className="rounded-md p-1.5 text-[#9aa3ae] hover:bg-white/10 hover:text-white"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDeleteClick(category)}
+                      disabled={isBusy}
+                      className="rounded-md p-1.5 text-red-400/80 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      {isBusy && !isEditing ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="mt-5 w-full rounded-lg border border-white/10 py-2.5 text-sm font-semibold text-[#9aa3ae] transition-colors hover:bg-white/5"
+        >
+          Done
+        </button>
       </div>
     </div>
   );

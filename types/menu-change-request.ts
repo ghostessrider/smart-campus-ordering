@@ -6,7 +6,6 @@ import {
 export interface MenuChangeRequest {
   id: string;
   vendorId: string;
-  storeId: string;
   changeType: MenuChangeType;
   targetId?: string;
   payload: Record<string, unknown>;

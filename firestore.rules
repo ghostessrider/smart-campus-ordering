@@ -1,10 +1,10 @@
 rules_version = '2';
 
 // NOTE: No firestore.rules file existed in this repo before this change —
-// this is a first draft covering the collections currently in use plus the
-// two new write paths added with the vendor dashboard rebuild (store status
-// toggle, order rejection with reason). Review with the team before
-// deploying — this has not been tested against the Firebase emulator.
+// still not deployed/tested against the Firebase emulator as of this
+// update. Review with the team before deploying. Updated to cover:
+// vendor menu writes, the 6-stage order status flow, student cancellation,
+// and the new menuChangeRequests collection (price-change governance).
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -20,6 +20,13 @@ service cloud.firestore {
 
     function isOwnUser() {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // True if the signed-in user's email matches the vendor doc being
+    // acted on. Vendors have no uid field in this schema (see
+    // unified-login.ts) — email is the only reliable link.
+    function isOwnVendor(vendorEmail) {
+      return isSignedIn() && request.auth.token.email == vendorEmail;
     }
 
     // users/{uid}
@@ -44,11 +51,11 @@ service cloud.firestore {
       allow create: if isAdmin();
 
       // Vendor can update ONLY their own doc, and only the `status` field
-      // (the open/closed toggle added today). Anything else — name, upiID,
-      // rating, etc. — stays admin-only until a separate flow exists for it.
+      // (the open/closed toggle). Anything else — name, upiID, rating,
+      // queueNumber, etc. — stays admin-only, or is written by a trusted
+      // transaction (see createOrder, which increments queueNumber).
       allow update: if isAdmin() ||
-        (isSignedIn() &&
-         resource.data.email == request.auth.token.email &&
+        (isOwnVendor(resource.data.email) &&
          request.resource.data.diff(resource.data).affectedKeys()
            .hasOnly(['status']));
 
@@ -56,9 +63,32 @@ service cloud.firestore {
     }
 
     // menuItems/{itemId}
+    // Students read everything. A vendor may create/update/delete only
+    // items whose vendorId matches their own vendor doc's id. Price is
+    // intentionally NOT excluded from vendor writes here — the 3-day
+    // governance window is enforced in application code
+    // (menu-governance-service.ts), not in these rules, because rules
+    // cannot easily resolve "this vendor's createdAt + 3 days" against
+    // a separate vendor document for a write on a menuItems document.
+    // This means a compromised/modified client could currently bypass
+    // governance and write price directly — flagged as a known gap,
+    // not yet closed.
     match /menuItems/{itemId} {
       allow read: if true;
-      allow write: if isAdmin(); // vendor menu-write rules to be added separately
+
+      allow create: if isAdmin() ||
+        (isSignedIn() &&
+         exists(/databases/$(database)/documents/vendors/$(request.resource.data.vendorId)) &&
+         isOwnVendor(
+           get(/databases/$(database)/documents/vendors/$(request.resource.data.vendorId)).data.email
+         ));
+
+      allow update, delete: if isAdmin() ||
+        (isSignedIn() &&
+         exists(/databases/$(database)/documents/vendors/$(resource.data.vendorId)) &&
+         isOwnVendor(
+           get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.email
+         ));
     }
 
     // orders/{orderId}
@@ -73,10 +103,48 @@ service cloud.firestore {
          request.resource.data.status == 'rejected' &&
          request.resource.data.rejectionReason is string &&
          request.resource.data.rejectionReason.size() > 0) ||
+
+        // Student cancelling their own order, only while still pending.
+        (isSignedIn() &&
+         resource.data.userId == request.auth.uid &&
+         resource.data.status == 'pending' &&
+         request.resource.data.status == 'cancelled' &&
+         request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['status', 'updatedAt'])) ||
+
+        // Vendor advancing status through the normal flow — timestamp
+        // fields are additive only, never removed.
         (isSignedIn() &&
          request.resource.data.diff(resource.data).affectedKeys()
-           .hasOnly(['status', 'updatedAt', 'acceptedAt', 'completedAt', 'deliveredAt']));
+           .hasOnly([
+             'status', 'updatedAt', 'acceptedAt', 'preparingAt',
+             'readyAt', 'completedAt', 'deliveredAt'
+           ]));
 
+      allow delete: if false;
+    }
+
+    // menuChangeRequests/{requestId}
+    // Vendor creates requests for their own vendorId, can read their own.
+    // Only admin reviews (approve/reject) — that path also writes the
+    // live price onto menuItems, handled by menu-governance-service.ts.
+    match /menuChangeRequests/{requestId} {
+      allow read: if isAdmin() ||
+        (isSignedIn() &&
+         exists(/databases/$(database)/documents/vendors/$(resource.data.vendorId)) &&
+         isOwnVendor(
+           get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data.email
+         ));
+
+      allow create: if isAdmin() ||
+        (isSignedIn() &&
+         request.resource.data.status == 'PENDING' &&
+         exists(/databases/$(database)/documents/vendors/$(request.resource.data.vendorId)) &&
+         isOwnVendor(
+           get(/databases/$(database)/documents/vendors/$(request.resource.data.vendorId)).data.email
+         ));
+
+      allow update: if isAdmin(); // approve/reject is admin-only
       allow delete: if false;
     }
   }

@@ -9,9 +9,12 @@ import {
   Check,
   X,
   Clock,
+  ChefHat,
   PackageCheck,
   Star,
   IndianRupee,
+  History,
+  Ban,
 } from "lucide-react";
 
 import {
@@ -26,10 +29,11 @@ import {
 import { auth } from "@/lib/firebase/auth";
 import { Vendor } from "@/types/vendor";
 import { VendorOrder } from "@/types/order";
+import { OrderStatus } from "@/constants/enums";
 
-type Column = "incoming" | "preparing" | "ready";
+type Column = "incoming" | "preparing" | "ready" | "delivered";
 
-const COLUMN_META: Record <
+const COLUMN_META: Record
   Column,
   { label: string; description: string; accent: string }
 > = {
@@ -48,6 +52,11 @@ const COLUMN_META: Record <
     description: "Call the token number out",
     accent: "#3ddc84",
   },
+  delivered: {
+    label: "Delivered",
+    description: "Picked up, done",
+    accent: "#9aa3ae",
+  },
 };
 
 export default function VendorDashboard() {
@@ -56,6 +65,7 @@ export default function VendorDashboard() {
   const [loadingVendor, setLoadingVendor] = useState(true);
   const [togglingStore, setTogglingStore] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VendorOrder | null>(null);
+  const [showClosedLog, setShowClosedLog] = useState(false);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -86,20 +96,28 @@ export default function VendorDashboard() {
     };
   }, []);
 
+  // Incoming = pending. Preparing covers both "accepted" (just accepted,
+  // not started yet) and "preparing" (actively being made) — they sit in
+  // the same column since both mean "in the kitchen, not ready yet", but
+  // each gets its own status-specific action button so the underlying
+  // stage is still tracked precisely in the database.
   const incoming = orders.filter((o) => o.status === "pending");
-  const preparing = orders.filter((o) => o.status === "accepted");
-  const ready = orders.filter((o) => o.status === "completed");
+  const preparing = orders.filter(
+    (o) => o.status === "accepted" || o.status === "preparing"
+  );
+  const ready = orders.filter((o) => o.status === "ready_for_pickup");
+  const delivered = orders.filter(
+    (o) => o.status === "delivered" || o.status === "completed"
+  );
+  const closedLog = orders.filter(
+    (o) => o.status === "rejected" || o.status === "cancelled"
+  );
 
-  async function handleAccept(order: VendorOrder) {
-    await updateOrderStatus(order.id, "accepted");
-  }
-
-  async function handleMarkReady(order: VendorOrder) {
-    await updateOrderStatus(order.id, "completed");
-  }
-
-  async function handleMarkDelivered(order: VendorOrder) {
-    await updateOrderStatus(order.id, "delivered");
+  async function handleStatusChange(
+    order: VendorOrder,
+    status: Exclude<OrderStatus, "pending" | "rejected">
+  ) {
+    await updateOrderStatus(order.id, status);
   }
 
   async function handleConfirmReject(reason: string) {
@@ -140,21 +158,23 @@ export default function VendorDashboard() {
 
   return (
     <main className="min-h-screen bg-[#0b0d10] px-6 py-10 lg:px-10">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-[1600px]">
         <VendorHeader
           vendor={vendor}
           toggling={togglingStore}
           onToggleStore={handleToggleStore}
+          closedLogCount={closedLog.length}
+          onShowClosedLog={() => setShowClosedLog(true)}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-4">
           <OrderColumn
             column="incoming"
             orders={incoming}
             renderActions={(order) => (
               <div className="flex gap-2.5">
                 <button
-                  onClick={() => handleAccept(order)}
+                  onClick={() => handleStatusChange(order, "accepted")}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f2a93b] py-2.5 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c]"
                 >
                   <Check size={15} strokeWidth={2.25} />
@@ -173,15 +193,25 @@ export default function VendorDashboard() {
           <OrderColumn
             column="preparing"
             orders={preparing}
-            renderActions={(order) => (
-              <button
-                onClick={() => handleMarkReady(order)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
-              >
-                <PackageCheck size={15} strokeWidth={2.25} />
-                Ready for pickup
-              </button>
-            )}
+            renderActions={(order) =>
+              order.status === "accepted" ? (
+                <button
+                  onClick={() => handleStatusChange(order, "preparing")}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
+                >
+                  <ChefHat size={15} strokeWidth={2.25} />
+                  Start preparing
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleStatusChange(order, "ready_for_pickup")}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
+                >
+                  <PackageCheck size={15} strokeWidth={2.25} />
+                  Ready for pickup
+                </button>
+              )
+            }
           />
 
           <OrderColumn
@@ -189,7 +219,7 @@ export default function VendorDashboard() {
             orders={ready}
             renderActions={(order) => (
               <button
-                onClick={() => handleMarkDelivered(order)}
+                onClick={() => handleStatusChange(order, "delivered")}
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#3ddc84] py-2.5 text-sm font-semibold text-[#06281a] transition-colors hover:bg-[#5ee69c]"
               >
                 <Check size={15} strokeWidth={2.25} />
@@ -197,6 +227,8 @@ export default function VendorDashboard() {
               </button>
             )}
           />
+
+          <OrderColumn column="delivered" orders={delivered} renderActions={() => null} />
         </div>
       </div>
 
@@ -207,6 +239,13 @@ export default function VendorDashboard() {
           onConfirm={handleConfirmReject}
         />
       )}
+
+      {showClosedLog && (
+        <ClosedOrdersLog
+          orders={closedLog}
+          onClose={() => setShowClosedLog(false)}
+        />
+      )}
     </main>
   );
 }
@@ -215,10 +254,14 @@ function VendorHeader({
   vendor,
   toggling,
   onToggleStore,
+  closedLogCount,
+  onShowClosedLog,
 }: {
   vendor: Vendor;
   toggling: boolean;
   onToggleStore: () => void;
+  closedLogCount: number;
+  onShowClosedLog: () => void;
 }) {
   const isOpen = vendor.status === "open";
 
@@ -254,7 +297,7 @@ function VendorHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <div className="text-right">
           <p className="text-xs text-[#9aa3ae]">This month</p>
           <p className="flex items-center justify-end gap-0.5 text-sm font-semibold text-white">
@@ -262,6 +305,19 @@ function VendorHeader({
             {vendor.monthlyRevenue.toLocaleString("en-IN")}
           </p>
         </div>
+
+        <button
+          onClick={onShowClosedLog}
+          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-[#9aa3ae] transition-colors hover:bg-white/15 hover:text-white"
+        >
+          <History size={14} strokeWidth={1.75} />
+          Cancelled / rejected
+          {closedLogCount > 0 && (
+            <span className="rounded-full bg-white/15 px-1.5 text-[10px]">
+              {closedLogCount}
+            </span>
+          )}
+        </button>
 
         <button
           onClick={onToggleStore}
@@ -374,9 +430,11 @@ function OrderTicket({
         </span>
       </div>
 
-      <div className="mt-3" style={{ accentColor: accent }}>
-        {children}
-      </div>
+      {children && (
+        <div className="mt-3" style={{ accentColor: accent }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -471,6 +529,71 @@ function RejectReasonModal({
             )}
             Reject order
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClosedOrdersLog({
+  orders,
+  onClose,
+}: {
+  orders: VendorOrder[];
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#12151a] p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold text-white">
+            Cancelled &amp; rejected orders
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-[#9aa3ae] hover:bg-white/10 hover:text-white"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="mt-4 max-h-[60vh] space-y-2.5 overflow-y-auto">
+          {orders.length === 0 ? (
+            <p className="py-8 text-center text-sm text-[#9aa3ae]/60">
+              Nothing here.
+            </p>
+          ) : (
+            orders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-xl border border-white/10 bg-[#171b21] p-3.5"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-sm font-semibold text-white">
+                    #{order.orderNumber ?? order.id.slice(-4)}
+                  </span>
+                  <span
+                    className={clsx(
+                      "flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                      order.status === "rejected"
+                        ? "bg-red-500/15 text-red-300"
+                        : "bg-white/10 text-[#9aa3ae]"
+                    )}
+                  >
+                    <Ban size={11} />
+                    {order.status === "rejected"
+                      ? "Rejected by you"
+                      : "Cancelled by student"}
+                  </span>
+                </div>
+                {order.status === "rejected" && order.rejectionReason && (
+                  <p className="mt-1.5 text-xs text-[#9aa3ae]">
+                    Reason: {order.rejectionReason}
+                  </p>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

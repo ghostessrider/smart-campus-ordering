@@ -14,10 +14,6 @@ import { db } from "@/lib/firebase/firestore";
 import { OrderStatus } from "@/constants/enums";
 import { VendorOrder } from "@/types/order";
 
-
-
-
-
 type CreateOrderPayload = {
   vendorId: string;
   userId: string;
@@ -314,6 +310,8 @@ export async function updateOrderStatus(
     status: string;
     updatedAt: ReturnType<typeof serverTimestamp>;
     acceptedAt?: ReturnType<typeof serverTimestamp>;
+    preparingAt?: ReturnType<typeof serverTimestamp>;
+    readyAt?: ReturnType<typeof serverTimestamp>;
     completedAt?: ReturnType<typeof serverTimestamp>;
     deliveredAt?: ReturnType<typeof serverTimestamp>;
   } = {
@@ -323,6 +321,14 @@ export async function updateOrderStatus(
 
   if (status === "accepted") {
     updateData.acceptedAt = serverTimestamp();
+  }
+
+  if (status === "preparing") {
+    updateData.preparingAt = serverTimestamp();
+  }
+
+  if (status === "ready_for_pickup") {
+    updateData.readyAt = serverTimestamp();
   }
 
   if (status === "completed") {

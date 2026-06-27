@@ -12,6 +12,9 @@ export interface Vendor {
   email: string;
   phone: number;
   image: string;
+  photoURL?: string;
+  description?: string;
+  active?: boolean;
   upiID: string;
   status: "open" | "closed";
   avgPrepTime: number;

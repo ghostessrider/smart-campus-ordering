@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, AlertTriangle, Loader2, UploadCloud, Clock, Tag } from 'lucide-react';
+import { Store, AlertTriangle, Loader2, UploadCloud, Clock } from 'lucide-react';
 import { Vendor, VendorStatus } from '../types';
 
 interface VendorRegistrationTabProps {
@@ -11,8 +11,6 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    category: '',
-    icon: 'store',
     image: '',
     avgPrepTime: '15'
   });
@@ -29,8 +27,8 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
     setError('');
     setSuccess('');
 
-    if (!formData.name || !formData.email || !formData.category) {
-      setError('Please fill in all required fields (Name, Email, Category).');
+    if (!formData.name || !formData.email) {
+      setError('Please fill in all required fields (Name, Email).');
       return;
     }
 
@@ -41,10 +39,10 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
       const newVendor: Vendor = {
         id: `vendor-${Date.now()}`,
         name: formData.name,
-        category: formData.category,
+        category: 'Uncategorized',
         status: VendorStatus.OPEN,
         image: formData.image,
-        icon: formData.icon,
+        icon: 'store',
         rating: 0,
         totalOrders: 0,
         avgPrepTime: parseInt(formData.avgPrepTime) || 15,
@@ -62,8 +60,6 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
       setFormData({
         name: '',
         email: '',
-        category: '',
-        icon: 'store',
         image: '',
         avgPrepTime: '15'
       });
@@ -117,40 +113,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
               </label>
             </div>
 
-            {/* Classification */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Tag className="w-4 h-4 text-[#f2a93b]" /> Classification
-              </h3>
-              
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Category *</span>
-                <input
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  placeholder="e.g., Beverages, Fast Food, Healthy"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
-                  required
-                />
-              </label>
 
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">UI Icon</span>
-                <select
-                  name="icon"
-                  value={formData.icon}
-                  onChange={handleChange}
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b] cursor-pointer"
-                >
-                  <option value="store">Default Store</option>
-                  <option value="coffee">Coffee / Beverages</option>
-                  <option value="pizza">Pizza</option>
-                  <option value="burger">Burgers / Fast Food</option>
-                  <option value="ramen">Asian / Noodles</option>
-                </select>
-              </label>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">

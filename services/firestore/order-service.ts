@@ -13,6 +13,7 @@ import {
 import { db } from "@/lib/firebase/firestore";
 import { OrderStatus } from "@/constants/enums";
 import { VendorOrder } from "@/types/order";
+import { checkRateLimit, recordRequest } from "@/services/security/rate-limit-service";
 
 type CreateOrderPayload = {
   vendorId: string;
@@ -30,6 +31,8 @@ export async function createOrder(order: CreateOrderPayload) {
   if (!order.vendorId) {
     throw new Error("Order must include a vendorId to generate vendor-relative orderNumber.");
   }
+
+  await checkRateLimit(order.userId, "createOrder");
 
   const ordersCollection = collection(db, "orders");
   const orderRef = doc(ordersCollection);
@@ -62,6 +65,8 @@ export async function createOrder(order: CreateOrderPayload) {
       updatedAt: serverTimestamp(),
     });
   });
+
+  await recordRequest(order.userId, "createOrder");
 
   return orderRef.id;
 }

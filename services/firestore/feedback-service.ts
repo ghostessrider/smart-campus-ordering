@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
+import { checkRateLimit, recordRequest } from "@/services/security/rate-limit-service";
 
 type FeedbackPayload = {
   orderId: string;
@@ -28,6 +29,8 @@ export async function getFeedbackByOrderId(orderId: string) {
 }
 
 export async function createFeedback(payload: FeedbackPayload) {
+  await checkRateLimit(payload.userId, "submitFeedback");
+
   const orderRef = doc(db, "orders", payload.orderId);
   const orderSnap = await getDoc(orderRef);
 
@@ -54,6 +57,8 @@ export async function createFeedback(payload: FeedbackPayload) {
     comment: payload.comment,
     createdAt: serverTimestamp(),
   });
+
+  await recordRequest(payload.userId, "submitFeedback");
 
   return ref.id;
 }

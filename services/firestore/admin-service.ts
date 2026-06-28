@@ -1,10 +1,25 @@
 import {
   collection,
-  getDocs
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/firestore";
 
+export async function getAdminByUid(uid: string) {
+  const q = query(collection(db, "admins"), where("uid", "==", uid));
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  return {
+    id: snapshot.docs[0].id,
+    ...snapshot.docs[0].data(),
+  };
+}
 
 export async function getAllOrders(){
 

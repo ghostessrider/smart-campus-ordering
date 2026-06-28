@@ -46,6 +46,22 @@ export async function getVendorById(vendorId: string): Promise<Vendor | null> {
 
 
 
+// AUTH / VENDOR: get vendor by uid
+export async function getVendorByUid(uid: string): Promise<Vendor | null> {
+  const q = query(collection(db, "vendors"), where("uid", "==", uid));
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  return {
+    id: snapshot.docs[0].id,
+    ...snapshot.docs[0].data(),
+  } as Vendor;
+}
+
 // AUTH / VENDOR: get vendor by email
 export async function getVendorByEmail(
   email: string

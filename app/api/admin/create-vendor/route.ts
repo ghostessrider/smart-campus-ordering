@@ -3,14 +3,13 @@ import { createVendorAuthUser, createVendorProfile } from "@/services/auth/vendo
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as { shopName?: string; email?: string };
     const { shopName, email } = body;
 
     if (!shopName || !email) {
       return NextResponse.json({ message: "Missing required fields: shopName and email." }, { status: 400 });
     }
 
-    // Generate a secure temporary password for the vendor
     const tempPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12).toUpperCase();
 
     const uid = await createVendorAuthUser(email, tempPassword);
@@ -24,8 +23,9 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ vendor: vendorDoc }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message || "Vendor creation failed." }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Vendor creation failed.";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }
 

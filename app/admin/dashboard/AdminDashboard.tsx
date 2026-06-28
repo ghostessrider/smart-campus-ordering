@@ -139,12 +139,12 @@ export default function AdminDashboard() {
   }, []);
 
   // Onboard / Add a direct new Vendor
-  const handleSaveVendor = async (newVendor: Vendor) => {
+  const handleSaveVendor = async (newVendor: Vendor & { uid?: string; email?: string }) => {
     const updated = [newVendor, ...vendors];
     setVendors(updated);
     localStorage.setItem('campuseats_vendors', JSON.stringify(updated));
 
-        if (isFirebaseConfigured && db) {
+    if (isFirebaseConfigured && db && !newVendor.uid) {
       try {
         console.log('[Firestore] Accessing database to onboard vendor:', newVendor.name);
         await setDoc(doc(db, 'vendors', newVendor.id), newVendor);
@@ -368,7 +368,6 @@ export default function AdminDashboard() {
             ) : isFirebaseConfigured ? (
               <div className="hidden sm:flex items-center bg-teal-900/30 text-teal-400 border border-teal-700/50 px-3 py-1.5 rounded-full text-xs font-semibold">
                 <Database className="w-3.5 h-3.5 text-teal-400 mr-1.5 animate-pulse" />
-                <span>Live Firestore Online</span>
               </div>
             ) : (
               <div className="hidden sm:flex items-center bg-white/5 text-slate-400 border border-white/10 px-3 py-1.5 rounded-full text-xs font-medium">

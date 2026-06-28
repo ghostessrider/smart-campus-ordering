@@ -67,8 +67,7 @@ export interface Vendor {
   icon: string;
   rating: number;
   totalOrders: number;
-  avgPrepTime: number;
-  monthlyRevenue: number;
+  earning: number;
   satisfaction: number;
 }
 

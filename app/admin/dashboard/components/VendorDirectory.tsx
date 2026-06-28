@@ -59,9 +59,9 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onT
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      if (sortOption === 'popularity') return b.totalOrders - a.totalOrders;
+      if (sortOption === 'popularity') return (b.earning ?? 0) - (a.earning ?? 0);
       if (sortOption === 'rating') return b.rating - a.rating;
-      if (sortOption === 'preptime') return a.avgPrepTime - b.avgPrepTime;
+      if (sortOption === 'earning') return (b.earning ?? 0) - (a.earning ?? 0);
       return a.name.localeCompare(b.name);
     });
 
@@ -112,9 +112,9 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onT
               onChange={(e) => setSortOption(e.target.value)}
               className="bg-transparent border-none p-1 focus:outline-none focus:ring-0 cursor-pointer text-slate-300"
             >
-              <option value="popularity">Popularity (Orders)</option>
+              <option value="popularity">Earnings</option>
               <option value="rating">Rating</option>
-              <option value="preptime">Avg Prep Time</option>
+              <option value="earning">Highest Earning</option>
               <option value="name">Alphabetical</option>
             </select>
           </div>
@@ -194,15 +194,15 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onT
 
                 <div className="grid grid-cols-2 gap-4 my-4 border-y border-slate-800/50 py-3 text-center">
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Total Orders</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Earning</span>
                     <span className="font-bold text-sm text-slate-200 font-mono block mt-0.5">
-                      {Number(vendor.totalOrders ?? 0).toLocaleString()}
+                      ₹{Number(vendor.earning ?? 0).toLocaleString("en-IN")}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Avg Prep</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">Rating</span>
                     <span className="font-bold text-sm text-slate-200 font-mono block mt-0.5">
-                      {vendor.avgPrepTime}m
+                      {Number(vendor.rating ?? 0).toFixed(1)}
                     </span>
                   </div>
                 </div>

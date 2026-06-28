@@ -93,3 +93,17 @@ export async function setVendorStoreStatus(
   const ref = doc(db, "vendors", vendorId);
   await updateDoc(ref, { status });
 }
+
+export async function updateVendorProfile(
+  vendorId: string,
+  updates: {
+    description?: string;
+    phone?: number;
+    upiID?: string;
+    image?: string;
+    photoURL?: string;
+  }
+) {
+  const ref = doc(db, "vendors", vendorId);
+  await updateDoc(ref, updates);
+}

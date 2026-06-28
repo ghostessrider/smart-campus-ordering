@@ -1,4 +1,4 @@
-import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase/firestore";
 
 export interface VendorAccountInput {
@@ -15,6 +15,21 @@ export interface VendorAccountInput {
   avgPrepTime?: number;
   monthlyRevenue?: number;
   satisfaction?: number;
+}
+
+export interface VendorRegistrationResponse {
+  id: string;
+  uid: string;
+  description: string;
+  email: string;
+  image: string;
+  name: string;
+  phone: number;
+  photoURL: string;
+  queueNumber: number;
+  status: string;
+  totalOrders: number;
+  upiID: string;
 }
 
 export async function createVendorAuthUser(email: string, password: string) {
@@ -51,36 +66,69 @@ export async function createVendorAuthUser(email: string, password: string) {
 }
 
 export async function createVendorProfile(vendor: VendorAccountInput & { uid: string }) {
+  const normalizedEmail = vendor.email.toLowerCase();
+
   const existingQuery = query(
     collection(db, "vendors"),
-    where("email", "==", vendor.email.toLowerCase())
+    where("email", "==", normalizedEmail)
   );
   const existingSnapshot = await getDocs(existingQuery);
   if (!existingSnapshot.empty) {
     throw new Error("A vendor profile already exists with this email.");
   }
 
-  const vendorRef = doc(collection(db, "vendors"));
-  const vendorDoc = {
-    id: vendorRef.id,
+  const userRef = doc(db, "users", vendor.uid);
+  await setDoc(userRef, {
     uid: vendor.uid,
     name: vendor.name,
-    email: vendor.email.toLowerCase(),
-    shopName: vendor.shopName,
-    phone: vendor.phone || "",
-    status: vendor.status || "open",
-    icon: vendor.icon || "UtensilsCrossed",
-    category: vendor.category || "Campus Dining",
-    image: vendor.image || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80",
-    totalOrders: vendor.totalOrders ?? 0,
-    avgPrepTime: vendor.avgPrepTime ?? 12,
-    monthlyRevenue: vendor.monthlyRevenue ?? 0,
-    satisfaction: vendor.satisfaction ?? 4.8,
-    rating: 5,
+    email: normalizedEmail,
     role: "vendor",
-    createdAt: new Date(),
-  } as const;
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  const vendorRef = doc(db, "vendors", vendor.uid);
+  const vendorDoc: VendorRegistrationResponse = {
+    id: vendor.uid,
+    uid: vendor.uid,
+    description: "",
+    email: normalizedEmail,
+    image: "",
+    name: vendor.name,
+    phone: 0,
+    photoURL: "",
+    queueNumber: 0,
+    status: vendor.status || "open",
+    totalOrders: vendor.totalOrders ?? 0,
+    upiID: "",
+  };
 
   await setDoc(vendorRef, vendorDoc);
+
   return vendorDoc;
+}
+
+export async function registerVendorAccount(input: { name: string; email: string }) {
+  const response = await fetch("/api/admin/create-vendor", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      shopName: input.name,
+      email: input.email,
+    }),
+  });
+
+  const data = (await response.json()) as { vendor?: VendorRegistrationResponse; message?: string };
+
+  if (!response.ok) {
+    throw new Error(data.message || "Unable to register vendor.");
+  }
+
+  if (!data.vendor) {
+    throw new Error("Vendor registration did not return a profile.");
+  }
+
+  return data.vendor;
 }

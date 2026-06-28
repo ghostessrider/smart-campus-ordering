@@ -16,8 +16,9 @@ import {
 
 import {
   getVendorMenuItems,
-  createMenuItem,
+  createMenuItemWithImage,
   updateMenuItem,
+  uploadMenuItemImage,
   setMenuItemAvailability,
   getVendorCategories,
   renameVendorCategory,
@@ -95,17 +96,32 @@ export default function VendorMenuPage() {
     if (vendor) await loadMenu(vendor.id);
   }
 
-  async function handleSave(values: {
-    name: string;
-    description: string;
-    category: string;
-    price: number;
-  }) {
+  async function handleSave(
+    values: {
+      name: string;
+      description: string;
+      category: string;
+      price: number;
+    },
+    imageFile?: File | null
+  ) {
     if (!vendor) return;
 
     if (editingItem === "new") {
-      await createMenuItem({ vendorId: vendor.id, ...values });
+      await createMenuItemWithImage(
+        { vendorId: vendor.id, ...values },
+        imageFile ?? undefined
+      );
     } else if (editingItem) {
+      let imageUrl: string | undefined;
+      if (imageFile) {
+        imageUrl = await uploadMenuItemImage(imageFile, vendor.id);
+      }
+
+      await updateMenuItem(
+        editingItem.id,
+        imageUrl ? { ...values, image: imageUrl } : values
+      );
       // GOVERNANCE FEATURE — disabled for now (see import above). When
       // re-enabled, restore this branch instead of the plain
       // updateMenuItem call below.
@@ -360,13 +376,14 @@ function MenuItemEditor({
     description: string;
     category: string;
     price: number;
-  }) => Promise<void>;
+  }, imageFile?: File | null) => Promise<void>;
 }) {
   const [name, setName] = useState(item?.name ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [category, setCategory] = useState(item?.category ?? UNCATEGORIZED);
   const [customCategory, setCustomCategory] = useState("");
   const [price, setPrice] = useState(item ? String(item.price) : "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const isNewCategory = category === "__new__";
@@ -381,12 +398,15 @@ function MenuItemEditor({
 
     setSubmitting(true);
     try {
-      await onSave({
-        name: name.trim(),
-        description: description.trim(),
-        category: finalCategory.trim(),
-        price: parsedPrice,
-      });
+      await onSave(
+        {
+          name: name.trim(),
+          description: description.trim(),
+          category: finalCategory.trim(),
+          price: parsedPrice,
+        },
+        imageFile
+      );
     } finally {
       setSubmitting(false);
     }
@@ -435,6 +455,15 @@ function MenuItemEditor({
               placeholder="50"
               min={1}
               className="w-full rounded-lg border border-white/10 bg-[#0b0d10] px-3.5 py-2.5 text-sm text-white placeholder:text-[#9aa3ae]/50 focus:border-[#f2a93b]/50 focus:outline-none"
+            />
+          </Field>
+
+          <Field label="Photo (optional)">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              className="w-full rounded-lg border border-white/10 bg-[#0b0d10] px-3 py-2 text-sm text-[#9aa3ae]"
             />
           </Field>
 

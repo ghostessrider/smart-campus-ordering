@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Store, AlertTriangle, Loader2 } from 'lucide-react';
 import { Vendor, VendorStatus } from '../types';
+import { registerVendorAccount } from '@/services/auth/vendor-create';
 
 interface VendorRegistrationTabProps {
-  onSaveVendor: (vendor: Vendor) => void;
+  onSaveVendor: (vendor: Vendor & { uid?: string; email?: string }) => void;
   onCancel?: () => void;
 }
 
@@ -32,29 +33,29 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
 
     setLoading(true);
     try {
-      // Simulate API call for creation (you would replace this with actual logic)
-      // Since it's currently a client-side prototype, we'll just trigger the save prop
-      const newVendor: Vendor = {
-        id: `vendor-${Date.now()}`,
+      const registeredVendor = await registerVendorAccount({
         name: formData.name,
+        email: formData.email,
+      });
+
+      const newVendor: Vendor & { uid?: string; email?: string } = {
+        id: registeredVendor.id,
+        name: registeredVendor.name,
         category: 'Uncategorized',
-        status: VendorStatus.OPEN,
-        image: '',
+        status: registeredVendor.status === 'closed' ? VendorStatus.CLOSED : VendorStatus.OPEN,
+        image: registeredVendor.image || '',
         icon: 'store',
         rating: 0,
-        totalOrders: 0,
-        avgPrepTime: 15,
-        monthlyRevenue: 0,
-        satisfaction: 0
+        totalOrders: registeredVendor.totalOrders ?? 0,
+        earning: 0,
+        satisfaction: 0,
+        uid: registeredVendor.uid,
+        email: registeredVendor.email,
       };
-
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 800));
 
       onSaveVendor(newVendor);
       setSuccess(`${formData.name} has been successfully registered!`);
-      
-      // Reset form
+
       setFormData({
         name: '',
         email: ''

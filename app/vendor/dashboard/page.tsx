@@ -24,10 +24,12 @@ import {
 import {
   getVendorByEmail,
   setVendorStoreStatus,
+  updateVendorProfile,
 } from "@/services/firestore/vendor-service";
 import { auth } from "@/lib/firebase/auth";
 import { Vendor } from "@/types/vendor";
 import { VendorOrder } from "@/types/order";
+import { uploadImage } from "@/services/cloudinary/upload-service";
 
 type Column = "incoming" | "preparing" | "ready";
 
@@ -59,6 +61,15 @@ export default function VendorDashboard() {
   const [togglingStore, setTogglingStore] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VendorOrder | null>(null);
   const [showClosedLog, setShowClosedLog] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    description: "",
+    phone: "",
+    upiID: "",
+    image: "",
+  });
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -77,6 +88,12 @@ export default function VendorDashboard() {
       }
 
       setVendor(vendorDoc);
+      setProfileForm({
+        description: vendorDoc.description ?? "",
+        phone: vendorDoc.phone ? String(vendorDoc.phone) : "",
+        upiID: vendorDoc.upiID ?? "",
+        image: vendorDoc.image ?? vendorDoc.photoURL ?? "",
+      });
       setLoadingVendor(false);
 
       unsubscribe = listenToVendorOrders(vendorDoc.id, setOrders);
@@ -131,6 +148,42 @@ export default function VendorDashboard() {
     }
   }
 
+  async function handleSaveProfile(event: React.FormEvent) {
+    event.preventDefault();
+    if (!vendor) return;
+
+    setProfileSaving(true);
+    setProfileMessage(null);
+
+    try {
+      let imageUrl = profileForm.image;
+      if (profileImageFile) {
+        if (profileImageFile.size > 500 * 1024) {
+          throw new Error("Image must be under 500 KB.");
+        }
+        imageUrl = await uploadImage(profileImageFile, `vendors/${vendor.id}`);
+      }
+
+      const updates = {
+        description: profileForm.description,
+        phone: Number(profileForm.phone || 0),
+        upiID: profileForm.upiID,
+        image: imageUrl,
+        photoURL: imageUrl,
+      };
+
+      await updateVendorProfile(vendor.id, updates);
+      setVendor({ ...vendor, ...updates, phone: Number(profileForm.phone || 0) });
+      setProfileForm((prev) => ({ ...prev, image: imageUrl }));
+      setProfileMessage("Profile updated successfully.");
+      setProfileImageFile(null);
+    } catch (error) {
+      setProfileMessage(error instanceof Error ? error.message : "Unable to update profile.");
+    } finally {
+      setProfileSaving(false);
+    }
+  }
+
   if (loadingVendor) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#0b0d10]">
@@ -160,7 +213,18 @@ export default function VendorDashboard() {
           onShowClosedLog={() => setShowClosedLog(true)}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[1.45fr_0.95fr]">
+          <VendorProfileCard
+            vendor={vendor}
+            profileForm={profileForm}
+            profileMessage={profileMessage}
+            profileSaving={profileSaving}
+            onFormChange={setProfileForm}
+            onImageChange={setProfileImageFile}
+            onSubmit={handleSaveProfile}
+          />
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 xl:grid-cols-1">
           <OrderColumn
             column="incoming"
             orders={incoming}
@@ -211,6 +275,7 @@ export default function VendorDashboard() {
             )}
           />
         </div>
+        </div>
       </div>
 
       {rejectTarget && (
@@ -228,6 +293,97 @@ export default function VendorDashboard() {
         />
       )}
     </main>
+  );
+}
+
+function VendorProfileCard({
+  vendor,
+  profileForm,
+  profileMessage,
+  profileSaving,
+  onFormChange,
+  onImageChange,
+  onSubmit,
+}: {
+  vendor: Vendor;
+  profileForm: { description: string; phone: string; upiID: string; image: string };
+  profileMessage: string | null;
+  profileSaving: boolean;
+  onFormChange: React.Dispatch<React.SetStateAction<{ description: string; phone: string; upiID: string; image: string }>>;
+  onImageChange: (file: File | null) => void;
+  onSubmit: (event: React.FormEvent) => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-white/10 bg-[#12151a] p-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white">Vendor Profile</h2>
+          <p className="text-sm text-[#9aa3ae]">Complete your profile so students can trust your store.</p>
+        </div>
+      </div>
+
+      <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9aa3ae]">Profile image (under 500 KB)</span>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(event) => onImageChange(event.target.files?.[0] ?? null)}
+            className="block w-full rounded-xl border border-white/10 bg-[#0b0d10] px-3 py-2 text-sm text-[#9aa3ae]"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9aa3ae]">Phone</span>
+          <input
+            type="tel"
+            value={profileForm.phone}
+            onChange={(event) => onFormChange((prev) => ({ ...prev, phone: event.target.value }))}
+            placeholder="9876543210"
+            className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f2a93b]"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9aa3ae]">UPI ID</span>
+          <input
+            type="text"
+            value={profileForm.upiID}
+            onChange={(event) => onFormChange((prev) => ({ ...prev, upiID: event.target.value }))}
+            placeholder="yourname@upi"
+            className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f2a93b]"
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9aa3ae]">Description</span>
+          <textarea
+            value={profileForm.description}
+            onChange={(event) => onFormChange((prev) => ({ ...prev, description: event.target.value }))}
+            rows={4}
+            placeholder="Tell students what makes your store special."
+            className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f2a93b]"
+          />
+        </label>
+
+        {profileMessage && (
+          <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-[#9aa3ae]">
+            {profileMessage}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-[#9aa3ae]">{vendor.email}</p>
+          <button
+            type="submit"
+            disabled={profileSaving}
+            className="rounded-full bg-[#f2a93b] px-4 py-2 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c] disabled:opacity-60"
+          >
+            {profileSaving ? "Saving…" : "Save profile"}
+          </button>
+        </div>
+      </form>
+    </section>
   );
 }
 
@@ -261,7 +417,7 @@ function VendorHeader({
             </span>
             <span className="flex items-center gap-1">
               <Clock size={13} />
-              ~{vendor.avgPrepTime} min prep
+              Rating {vendor.rating ? vendor.rating.toFixed(1) : "0.0"}
             </span>
             {vendor.upiID ? (
               <span className="flex items-center gap-1 font-mono">
@@ -283,7 +439,7 @@ function VendorHeader({
           <p className="text-xs text-[#9aa3ae]">This month</p>
           <p className="flex items-center justify-end gap-0.5 text-sm font-semibold text-white">
             <IndianRupee size={13} />
-            {((vendor.monthlyRevenue) ?? 0).toLocaleString("en-IN")}
+            {(vendor.earning ?? 0).toLocaleString("en-IN")}
           </p>
         </div>
 
@@ -303,20 +459,31 @@ function VendorHeader({
         <button
           onClick={onToggleStore}
           disabled={toggling}
+          aria-pressed={isOpen}
           className={clsx(
-            "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
+            "flex items-center gap-3 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
             isOpen
-              ? "bg-[#3ddc84]/15 text-[#3ddc84] hover:bg-[#3ddc84]/25"
-              : "bg-white/10 text-[#9aa3ae] hover:bg-white/15"
+              ? "border-[#3ddc84]/30 bg-[#3ddc84]/15 text-[#3ddc84] hover:bg-[#3ddc84]/25"
+              : "border-white/10 bg-white/10 text-[#9aa3ae] hover:bg-white/15"
           )}
         >
+          <span className="text-[10px] uppercase tracking-[0.24em] text-[#9aa3ae]">
+            Store
+          </span>
           <span
             className={clsx(
-              "h-2 w-2 rounded-full",
-              isOpen ? "bg-[#3ddc84]" : "bg-[#9aa3ae]"
+              "relative flex h-6 w-11 items-center rounded-full transition-colors",
+              isOpen ? "bg-[#3ddc84]/25" : "bg-white/15"
             )}
-          />
-          {toggling ? "Updating…" : isOpen ? "Open" : "Closed"}
+          >
+            <span
+              className={clsx(
+                "absolute h-5 w-5 rounded-full border border-white/20 bg-white shadow-sm transition-transform",
+                isOpen ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </span>
+          <span>{toggling ? "Updating…" : isOpen ? "Open" : "Closed"}</span>
         </button>
       </div>
     </div>

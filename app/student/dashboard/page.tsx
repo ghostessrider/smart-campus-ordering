@@ -10,6 +10,7 @@ type Vendor = {
   id: string;
   name: string;
   description?: string;
+  imageURL?: string;
   photoURL?: string;
 };
 
@@ -118,9 +119,9 @@ export default function StudentDashboard() {
                 className="group overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900/90 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)] transition hover:-translate-y-1 hover:border-[#f2a93b]/40"
               >
                 <div className="relative h-44 bg-slate-800">
-                  {vendor.photoURL ? (
+                  {vendor.imageURL || vendor.photoURL ? (
                     <img
-                      src={vendor.photoURL}
+                      src={vendor.imageURL || vendor.photoURL}
                       alt={`${vendor.name} logo`}
                       className="h-full w-full object-cover"
                     />

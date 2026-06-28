@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, AlertTriangle, Loader2, UploadCloud, Clock } from 'lucide-react';
+import { Store, AlertTriangle, Loader2 } from 'lucide-react';
 import { Vendor, VendorStatus } from '../types';
 
 interface VendorRegistrationTabProps {
@@ -10,9 +10,7 @@ interface VendorRegistrationTabProps {
 export default function VendorRegistrationTab({ onSaveVendor, onCancel }: VendorRegistrationTabProps) {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    image: '',
-    avgPrepTime: '15'
+    email: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,11 +39,11 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
         name: formData.name,
         category: 'Uncategorized',
         status: VendorStatus.OPEN,
-        image: formData.image,
+        image: '',
         icon: 'store',
         rating: 0,
         totalOrders: 0,
-        avgPrepTime: parseInt(formData.avgPrepTime) || 15,
+        avgPrepTime: 15,
         monthlyRevenue: 0,
         satisfaction: 0
       };
@@ -59,9 +57,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
       // Reset form
       setFormData({
         name: '',
-        email: '',
-        image: '',
-        avgPrepTime: '15'
+        email: ''
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to register vendor.');
@@ -77,80 +73,37 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
         <p className="text-sm text-slate-400">Onboard a new cafeteria station or private vendor to the Campus Eats platform.</p>
       </div>
 
-      <div className="bg-[#12151a] border border-slate-800 p-8 rounded-2xl shadow-xl shadow-black/10">
+      <div className="rounded-[2rem] border border-slate-800 bg-[#12151a] p-8 shadow-[0_25px_60px_-25px_rgba(15,23,42,0.95)]">
         <form onSubmit={handleSubmit} className="space-y-6">
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Store className="w-4 h-4 text-[#f2a93b]" /> Basic Information
-              </h3>
-              
+          <div className="rounded-2xl border border-slate-800 bg-[#0b0d10]/70 p-6">
+            <div className="mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+              <Store className="h-4 w-4 text-[#f2a93b]" />
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-white">Basic Information</h3>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
               <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Shop Name *</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Shop Name *</span>
                 <input
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g., Campus Cafe"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#12151a] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                   required
                 />
               </label>
 
               <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Contact Email *</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Contact Email *</span>
                 <input
                   name="email"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="vendor@example.com"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#12151a] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                   required
-                />
-              </label>
-            </div>
-
-
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-            {/* Media & Operations */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <UploadCloud className="w-4 h-4 text-[#f2a93b]" /> Media
-              </h3>
-              
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Cover Image URL</span>
-                <input
-                  name="image"
-                  type="url"
-                  value={formData.image}
-                  onChange={handleChange}
-                  placeholder="https://example.com/image.jpg"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
-                />
-              </label>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#f2a93b]" /> Operations
-              </h3>
-              
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Avg Prep Time (mins)</span>
-                <input
-                  name="avgPrepTime"
-                  type="number"
-                  min="1"
-                  value={formData.avgPrepTime}
-                  onChange={handleChange}
-                  placeholder="15"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                 />
               </label>
             </div>

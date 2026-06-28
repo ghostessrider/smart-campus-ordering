@@ -16,14 +16,6 @@ import {
   UtensilsCrossed,
   Pizza,
   SlidersHorizontal,
-  ChevronDown,
-  Trash2,
-  Sliders,
-  Settings2,
-  X,
-  XCircle,
-  Eye,
-  AlertTriangle
 } from 'lucide-react';
 import { Vendor, VendorStatus } from '../types';
 
@@ -31,12 +23,11 @@ interface VendorDirectoryProps {
   vendors: Vendor[];
   setVendors: React.Dispatch<React.SetStateAction<Vendor[]>>;
   onSaveVendor: (vendor: Vendor) => void;
-  onDeleteVendor: (vendorId: string) => void;
   onToggleStatus: (vendorId: string, nextStatus: VendorStatus) => void;
   onVendorClick: (vendorId: string) => void;
 }
 
-export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onDeleteVendor, onToggleStatus, onVendorClick }: VendorDirectoryProps) {
+export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onToggleStatus, onVendorClick }: VendorDirectoryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('popularity');
@@ -223,15 +214,6 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
                   >
                     {vendor.status === VendorStatus.DEACTIVATED ? 'Reactivate' : 'Toggle Status'}
                   </button>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => onDeleteVendor(vendor.id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-900/50 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 border border-slate-800 transition-colors cursor-pointer"
-                      title="Onboard delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>

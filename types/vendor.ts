@@ -11,7 +11,8 @@ export interface Vendor {
   name: string;
   email: string;
   phone: number;
-  image: string;
+  image?: string;
+  imageURL?: string;
   photoURL?: string;
   description?: string;
   active?: boolean;

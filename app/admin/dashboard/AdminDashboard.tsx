@@ -268,7 +268,6 @@ export default function AdminDashboard() {
               }
             }}
             onSaveVendor={handleSaveVendor}
-            onDeleteVendor={handleDeleteVendor}
             onToggleStatus={handleToggleVendorStatus}
             onVendorClick={(id) => setSelectedVendorId(id)}
           />

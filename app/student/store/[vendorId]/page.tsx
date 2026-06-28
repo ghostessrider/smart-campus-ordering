@@ -119,9 +119,9 @@ export default function VendorMenuPage() {
                 className="overflow-hidden rounded-[2rem] border border-slate-800 bg-slate-900 shadow-xl shadow-slate-950/40"
               >
                 <div className="relative h-56 bg-slate-800">
-                  {item.image ? (
+                  {item.imageURL || item.image ? (
                     <img
-                      src={item.image}
+                      src={item.imageURL || item.image}
                       alt={item.name}
                       className="h-full w-full object-cover"
                     />

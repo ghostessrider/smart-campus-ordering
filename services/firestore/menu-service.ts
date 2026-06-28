@@ -10,7 +10,10 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 import { db } from "@/lib/firebase/firestore";
+import { storage } from "@/lib/firebase/storage";
 import { MenuItem } from "@/types/menu-item";
 
 const UNCATEGORIZED = "Uncategorized";
@@ -213,3 +216,44 @@ export async function deleteVendorCategory(vendorId: string, name: string) {
 
   await renameVendorCategory(vendorId, name, UNCATEGORIZED);
 }
+
+// -----------------------------------------------------------------------------
+// IMAGE UPLOAD & ITEM CREATION WITH IMAGE
+// -----------------------------------------------------------------------------
+
+/**
+ * Uploads an image file to Firebase Storage and returns the public download URL.
+ */
+export async function uploadMenuItemImage(file: File, vendorId: string): Promise<string> {
+  // Generate a unique path for the image: menu-items/{vendorId}/{timestamp}_{filename}
+  const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+  const path = `menu-items/${vendorId}/${uniqueFilename}`;
+  
+  const storageRef = ref(storage, path);
+  
+  // Upload the file
+  await uploadBytes(storageRef, file);
+  
+  // Get and return the download URL
+  return await getDownloadURL(storageRef);
+}
+
+/**
+ * Convenience function to upload an image (if provided) and then create the menu item.
+ * The frontend can call this single function to handle both the storage and firestore updates.
+ */
+export async function createMenuItemWithImage(
+  item: Omit<Parameters<typeof createMenuItem>[0], "image">,
+  imageFile?: File
+) {
+  let imageUrl = "";
+  
+  if (imageFile) {
+    imageUrl = await uploadMenuItemImage(imageFile, item.vendorId);
+  }
+
+  return createMenuItem({
+    ...item,
+    image: imageUrl,
+  });
+}

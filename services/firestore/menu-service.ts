@@ -10,10 +10,8 @@ import {
   writeBatch,
 } from "firebase/firestore";
 
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-
 import { db } from "@/lib/firebase/firestore";
-import { storage } from "@/lib/firebase/storage";
+import { uploadImage } from "@/services/cloudinary/upload-service";
 import { MenuItem } from "@/types/menu-item";
 
 const UNCATEGORIZED = "Uncategorized";
@@ -222,20 +220,10 @@ export async function deleteVendorCategory(vendorId: string, name: string) {
 // -----------------------------------------------------------------------------
 
 /**
- * Uploads an image file to Firebase Storage and returns the public download URL.
+ * Uploads an image file to Cloudinary and returns the public URL.
  */
 export async function uploadMenuItemImage(file: File, vendorId: string): Promise<string> {
-  // Generate a unique path for the image: menu-items/{vendorId}/{timestamp}_{filename}
-  const uniqueFilename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-  const path = `menu-items/${vendorId}/${uniqueFilename}`;
-  
-  const storageRef = ref(storage, path);
-  
-  // Upload the file
-  await uploadBytes(storageRef, file);
-  
-  // Get and return the download URL
-  return await getDownloadURL(storageRef);
+  return uploadImage(file, `menuItems/${vendorId}`);
 }
 
 /**
@@ -256,4 +244,4 @@ export async function createMenuItemWithImage(
     ...item,
     image: imageUrl,
   });
-}
+}

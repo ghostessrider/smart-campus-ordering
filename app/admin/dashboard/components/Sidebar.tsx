@@ -9,8 +9,8 @@ import {
   MessageSquare, 
   Settings, 
   LogOut,
-  Sparkle,
-  UserPlus
+  UserPlus,
+  User
 } from 'lucide-react';
 import { TabType } from '../types';
 
@@ -19,6 +19,37 @@ interface SidebarProps {
   setActiveTab: (tab: TabType) => void;
   vendorCount: number;
   pendingCount: number;
+}
+
+function CowIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* ears */}
+      <ellipse cx="10" cy="24" rx="8" ry="10" fill="currentColor" opacity="0.9" />
+      <ellipse cx="54" cy="24" rx="8" ry="10" fill="currentColor" opacity="0.9" />
+      {/* head */}
+      <rect x="12" y="16" width="40" height="32" rx="16" fill="currentColor" />
+      {/* muzzle */}
+      <rect x="16" y="34" width="32" height="16" rx="8" fill="#0b0d10" opacity="0.85" />
+      {/* nostrils */}
+      <circle cx="25" cy="42" r="2.4" fill="currentColor" />
+      <circle cx="39" cy="42" r="2.4" fill="currentColor" />
+      {/* eyes */}
+      <circle cx="22" cy="27" r="2.6" fill="#0b0d10" />
+      <circle cx="42" cy="27" r="2.6" fill="#0b0d10" />
+      {/* spot */}
+      <path
+        d="M40 16c4 0 8 3 8 8s-4 6-8 4-6-5-4-8 2-4 4-4z"
+        fill="#0b0d10"
+        opacity="0.85"
+      />
+    </svg>
+  );
 }
 
 export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingCount }: SidebarProps) {
@@ -34,15 +65,15 @@ export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingC
       {/* Desktop Fixed Sidebar */}
       <aside 
         id="desktop-sidebar"
-        className="hidden lg:flex flex-col h-full py-6 bg-[#131b2e] border-r border-slate-800 fixed left-0 top-0 w-64 z-50 transition-all duration-300"
+        className="hidden lg:flex flex-col h-full py-6 bg-[#12151a] border-r border-slate-800 fixed left-0 top-0 w-64 z-50 transition-all duration-300"
       >
         {/* Brand Header */}
         <div className="px-6 mb-8 flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#ff5722] flex items-center justify-center rounded-lg shadow-lg shadow-[#ff5722]/20">
-            <Sparkle className="text-white w-5 h-5 fill-white animate-pulse" />
+          <div className="w-10 h-10 bg-[#f2a93b]/15 flex items-center justify-center rounded-full shadow-lg shadow-[#f2a93b]/10">
+            <CowIcon className="text-[#f2a93b] w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h1 className="font-sans font-bold text-lg text-white leading-tight">Campus Eats</h1>
+            <h1 className="font-sans font-bold text-lg text-white leading-tight tracking-wider">SMART COW</h1>
             <p className="text-[10px] text-slate-400 font-medium tracking-widest uppercase">Admin Panel</p>
           </div>
         </div>
@@ -51,14 +82,10 @@ export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingC
         <div className="mx-4 mb-6 p-4 rounded-xl bg-slate-900/50 border border-slate-800/60">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-orange-100 overflow-hidden border border-orange-200">
-                <img 
-                  alt="Campus admin" 
-                  className="w-full h-full object-cover" 
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=100&h=100&q=80"
-                />
+              <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#f2a93b]/10 border border-[#f2a93b]/20">
+                <User className="w-5 h-5 text-[#f2a93b]" />
               </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#131b2e]" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#12151a]" />
             </div>
             <div className="overflow-hidden">
               <p className="font-sans font-semibold text-xs text-white truncate">Campus Admin</p>
@@ -78,7 +105,7 @@ export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingC
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all duration-200 cursor-pointer ${
                   isActive 
-                    ? 'bg-[#ff5722] text-white font-semibold shadow-lg shadow-[#ff5722]/15' 
+                    ? 'bg-[#f2a93b] text-white font-semibold shadow-lg shadow-[#f2a93b]/15' 
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -119,7 +146,7 @@ export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingC
       {/* Mobile Sticky Bottom Browser Navigation Bar */}
       <nav 
         id="mobile-bottom-nav"
-        className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-[#131b2e] border-t border-slate-800 flex justify-around items-center px-4 py-2 shadow-2xl rounded-t-2xl pb-safe"
+        className="lg:hidden fixed bottom-0 left-0 w-full z-50 bg-[#12151a] border-t border-slate-800 flex justify-around items-center px-4 py-2 shadow-2xl rounded-t-2xl pb-safe"
       >
         {menuItems.map((item) => {
           const IconComponent = item.icon;
@@ -129,7 +156,7 @@ export default function Sidebar({ activeTab, setActiveTab, vendorCount, pendingC
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-150 relative cursor-pointer ${
-                isActive ? 'text-[#ff5722]' : 'text-slate-400'
+                isActive ? 'text-[#f2a93b]' : 'text-slate-400'
               }`}
             >
               <IconComponent className="w-5 h-5" />

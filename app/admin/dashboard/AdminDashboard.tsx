@@ -14,7 +14,8 @@ import {
   Info,
   Database,
   CloudLightning,
-  AlertCircle
+  AlertCircle,
+  User
 } from 'lucide-react';
 import { TabType, Vendor, FeedbackItem, FeedbackStatus, VendorStatus } from './types';
 import Sidebar from './components/Sidebar';
@@ -316,12 +317,24 @@ export default function AdminDashboard() {
       case TabType.VENDOR_REGISTRATION: return 'Onboard Vendor';
       case TabType.FEEDBACK: return 'Feedback Analytics';
       case TabType.SETTINGS: return 'Platform Settings';
-      default: return 'Campus Eats';
+      default: return 'SMART COW';
     }
   };
 
   return (
-    <div className="bg-[#0b0d10] font-sans text-slate-300 min-h-screen flex overflow-x-hidden antialiased">
+    <div className="relative bg-[#0b0d10] font-sans text-slate-300 min-h-screen flex overflow-x-hidden antialiased">
+      {/* ambient grid texture */}
+      <div
+        className="pointer-events-none fixed inset-0 opacity-[0.05] z-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(#9aa3ae 1px, transparent 1px), linear-gradient(90deg, #9aa3ae 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}
+      />
+      {/* warm glow behind */}
+      <div className="pointer-events-none fixed left-1/2 top-1/2 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f2a93b]/[0.07] blur-3xl z-0" />
+
       {/* Sidebar Core Component for Navigation */}
       <Sidebar 
         activeTab={activeTab} 
@@ -331,10 +344,10 @@ export default function AdminDashboard() {
       />
 
       {/* Main Fluid Canvas Container */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen pb-20 lg:pb-0">
+      <div className="relative z-10 flex-1 lg:pl-64 flex flex-col min-h-screen pb-20 lg:pb-0">
         
         {/* Top App Bar Header */}
-        <header className="sticky top-0 z-40 bg-[#131b2e]/95 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 flex justify-between items-center shadow-md">
+        <header className="sticky top-0 z-40 bg-[#12151a]/95 backdrop-blur-md border-b border-slate-800/80 px-6 py-4 flex justify-between items-center shadow-md">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => alert("Shortcut Sidebar drawer is fully accessible on the left!")}
@@ -343,7 +356,7 @@ export default function AdminDashboard() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-extrabold text-[#ff5722] tracking-tight">{getTabHeaderTitle()}</h2>
+            <h2 className="text-lg font-extrabold text-[#f2a93b] tracking-tight">{getTabHeaderTitle()}</h2>
           </div>
 
           <div className="flex items-center gap-4">
@@ -383,12 +396,8 @@ export default function AdminDashboard() {
             </button>
 
             {/* Super Admin profile avatar display */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-slate-700 select-none shadow-sm shrink-0">
-              <img 
-                alt="Headshot of representative admin" 
-                className="w-full h-full object-cover" 
-                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=80&h=80&q=80"
-              />
+            <div className="w-9 h-9 rounded-full bg-[#f2a93b]/10 flex items-center justify-center border border-[#f2a93b]/20 select-none shadow-sm shrink-0">
+              <User className="w-4 h-4 text-[#f2a93b]" />
             </div>
           </div>
         </header>

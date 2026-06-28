@@ -45,15 +45,15 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
   const renderVendorIcon = (iconName: string) => {
     switch (iconName?.toLowerCase()) {
       case 'coffee':
-        return <Coffee className="w-8 h-8 text-[#ff5722]" />;
+        return <Coffee className="w-8 h-8 text-[#f2a93b]" />;
       case 'ramen':
-        return <Flame className="w-8 h-8 text-[#ff5722]" />;
+        return <Flame className="w-8 h-8 text-[#f2a93b]" />;
       case 'burger':
-        return <UtensilsCrossed className="w-8 h-8 text-[#ff5722]" />;
+        return <UtensilsCrossed className="w-8 h-8 text-[#f2a93b]" />;
       case 'pizza':
-        return <Pizza className="w-8 h-8 text-[#ff5722]" />;
+        return <Pizza className="w-8 h-8 text-[#f2a93b]" />;
       default:
-        return <Store className="w-8 h-8 text-[#ff5722]" />;
+        return <Store className="w-8 h-8 text-[#f2a93b]" />;
     }
   };
 
@@ -92,7 +92,7 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
       </div>
 
       {/* Control bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#131b2e] p-4 rounded-2xl border border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#12151a] p-4 rounded-2xl border border-slate-800">
 
         {/* Sorting and Status Filters */}
         <div className="flex flex-wrap items-center gap-2">
@@ -138,7 +138,7 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
               placeholder="Search vendors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-sm font-sans text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#ff5722]/20 focus:border-[#ff5722] transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-sm font-sans text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#f2a93b]/20 focus:border-[#f2a93b] transition-all"
             />
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
           return (
             <div
               key={vendor.id}
-              className={`bg-[#131b2e] border border-slate-800 rounded-2xl overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5 transition-all duration-300 relative ${isDeactivated ? 'opacity-85 grayscale' : ''
+              className={`bg-[#12151a] border border-slate-800 rounded-2xl overflow-hidden flex flex-col group hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5 transition-all duration-300 relative ${isDeactivated ? 'opacity-85 grayscale' : ''
                 }`}
             >
               <div className="relative h-36 bg-slate-900/50 overflow-hidden">
@@ -184,14 +184,14 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
               </div>
 
               <div className="px-5 pb-5 -mt-8 flex-1 flex flex-col relative z-10">
-                <div className="w-16 h-16 rounded-full border-4 border-[#131b2e] bg-[#0b0d10] flex items-center justify-center shadow-md mb-3">
+                <div className="w-16 h-16 rounded-full border-4 border-[#12151a] bg-[#0b0d10] flex items-center justify-center shadow-md mb-3">
                   {renderVendorIcon(vendor.icon)}
                 </div>
 
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <button onClick={() => onVendorClick(vendor.id)} className="text-left cursor-pointer group/name">
-                      <h3 className="font-bold text-white text-base leading-tight group-hover/name:text-[#ff5722] transition-colors">{vendor.name}</h3>
+                      <h3 className="font-bold text-white text-base leading-tight group-hover/name:text-[#f2a93b] transition-colors">{vendor.name}</h3>
                     </button>
                     <p className="text-slate-400 text-xs mt-0.5">{vendor.category}</p>
                   </div>
@@ -219,7 +219,7 @@ export default function VendorDirectory({ vendors, setVendors, onSaveVendor, onD
                 <div className="mt-auto pt-3 flex items-center justify-between">
                   <button
                     onClick={() => toggleVendorStatus(vendor.id, vendor.status)}
-                    className="text-[#ff5722] hover:text-[#b02f00] font-sans text-xs font-bold hover:underline cursor-pointer"
+                    className="text-[#f2a93b] hover:text-[#f5b85c] font-sans text-xs font-bold hover:underline cursor-pointer"
                   >
                     {vendor.status === VendorStatus.DEACTIVATED ? 'Reactivate' : 'Toggle Status'}
                   </button>

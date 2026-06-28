@@ -81,14 +81,14 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
         <p className="text-sm text-slate-400">Onboard a new cafeteria station or private vendor to the Campus Eats platform.</p>
       </div>
 
-      <div className="bg-[#131b2e] border border-slate-800 p-8 rounded-2xl shadow-xl shadow-black/10">
+      <div className="bg-[#12151a] border border-slate-800 p-8 rounded-2xl shadow-xl shadow-black/10">
         <form onSubmit={handleSubmit} className="space-y-6">
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Store className="w-4 h-4 text-[#ff5722]" /> Basic Information
+                <Store className="w-4 h-4 text-[#f2a93b]" /> Basic Information
               </h3>
               
               <label className="block">
@@ -98,7 +98,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g., Campus Cafe"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                   required
                 />
               </label>
@@ -111,7 +111,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="vendor@example.com"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                   required
                 />
               </label>
@@ -120,7 +120,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
             {/* Classification */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Tag className="w-4 h-4 text-[#ff5722]" /> Classification
+                <Tag className="w-4 h-4 text-[#f2a93b]" /> Classification
               </h3>
               
               <label className="block">
@@ -130,7 +130,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   value={formData.category}
                   onChange={handleChange}
                   placeholder="e.g., Beverages, Fast Food, Healthy"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                   required
                 />
               </label>
@@ -141,7 +141,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   name="icon"
                   value={formData.icon}
                   onChange={handleChange}
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722] cursor-pointer"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b] cursor-pointer"
                 >
                   <option value="store">Default Store</option>
                   <option value="coffee">Coffee / Beverages</option>
@@ -157,7 +157,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
             {/* Media & Operations */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <UploadCloud className="w-4 h-4 text-[#ff5722]" /> Media
+                <UploadCloud className="w-4 h-4 text-[#f2a93b]" /> Media
               </h3>
               
               <label className="block">
@@ -168,14 +168,14 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   value={formData.image}
                   onChange={handleChange}
                   placeholder="https://example.com/image.jpg"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                 />
               </label>
             </div>
 
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-2 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#ff5722]" /> Operations
+                <Clock className="w-4 h-4 text-[#f2a93b]" /> Operations
               </h3>
               
               <label className="block">
@@ -187,7 +187,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
                   value={formData.avgPrepTime}
                   onChange={handleChange}
                   placeholder="15"
-                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#ff5722] focus:ring-1 focus:ring-[#ff5722]"
+                  className="mt-1.5 w-full rounded-xl border border-slate-800 bg-[#0b0d10] px-4 py-3 text-sm text-slate-200 outline-none transition focus:border-[#f2a93b] focus:ring-1 focus:ring-[#f2a93b]"
                 />
               </label>
             </div>
@@ -219,7 +219,7 @@ export default function VendorRegistrationTab({ onSaveVendor, onCancel }: Vendor
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff5722] px-8 py-2.5 text-sm font-bold text-white transition hover:bg-[#b02f00] disabled:cursor-not-allowed disabled:opacity-70 shadow-lg shadow-[#ff5722]/20 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#f2a93b] px-8 py-2.5 text-sm font-bold text-white transition hover:bg-[#f5b85c] disabled:cursor-not-allowed disabled:opacity-70 shadow-lg shadow-[#f2a93b]/20 cursor-pointer"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Complete Registration"}
             </button>

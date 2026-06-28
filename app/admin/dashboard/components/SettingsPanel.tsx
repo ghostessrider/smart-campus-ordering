@@ -46,9 +46,9 @@ export default function SettingsPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Operations Form (Left 7 cols) */}
-        <div className="lg:col-span-7 bg-[#131b2e] p-6 rounded-2xl border border-slate-800 space-y-6">
+        <div className="lg:col-span-7 bg-[#12151a] p-6 rounded-2xl border border-slate-800 space-y-6">
           <h4 className="font-bold text-white text-sm flex items-center gap-2">
-            <Settings className="w-5 h-5 text-[#ff5722]" />
+            <Settings className="w-5 h-5 text-[#f2a93b]" />
             Operating Parameters
           </h4>
 
@@ -59,7 +59,7 @@ export default function SettingsPanel() {
                 type="text" 
                 value={campusName}
                 onChange={(e) => setCampusName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#ff5722]/15 focus:border-[#ff5722]"
+                className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#f2a93b]/15 focus:border-[#f2a93b]"
               />
             </div>
 
@@ -70,7 +70,7 @@ export default function SettingsPanel() {
                   type="text" 
                   value={deliveryFee}
                   onChange={(e) => setDeliveryFee(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#ff5722]/15 focus:border-[#ff5722]"
+                  className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#f2a93b]/15 focus:border-[#f2a93b]"
                 />
               </div>
               <div>
@@ -79,14 +79,14 @@ export default function SettingsPanel() {
                   type="text" 
                   value={thresholdHours}
                   onChange={(e) => setThresholdHours(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#ff5722]/15 focus:border-[#ff5722]"
+                  className="w-full px-3 py-2 bg-[#0b0d10] border border-slate-800 rounded-xl text-xs text-slate-200 focus:bg-[#1a233a] focus:outline-none focus:ring-2 focus:ring-[#f2a93b]/15 focus:border-[#f2a93b]"
                 />
               </div>
             </div>
 
             <button 
               type="submit"
-              className="px-5 py-2.5 bg-[#ff5722] hover:bg-[#b02f00] text-white font-sans text-xs font-bold rounded-xl shadow-lg shadow-[#ff5722]/15 transition-all cursor-pointer"
+              className="px-5 py-2.5 bg-[#f2a93b] hover:bg-[#f5b85c] text-white font-sans text-xs font-bold rounded-xl shadow-lg shadow-[#f2a93b]/15 transition-all cursor-pointer"
             >
               Save Configurations
             </button>
@@ -116,9 +116,9 @@ export default function SettingsPanel() {
 
         {/* Integration Status panel (Right 5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-[#131b2e] p-6 rounded-2xl border border-slate-800 space-y-4">
+          <div className="bg-[#12151a] p-6 rounded-2xl border border-slate-800 space-y-4">
             <h4 className="font-bold text-white text-sm flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-[#ff5722]" />
+              <Cpu className="w-5 h-5 text-[#f2a93b]" />
               Database Channel Integration
             </h4>
 

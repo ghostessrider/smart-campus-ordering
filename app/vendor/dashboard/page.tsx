@@ -257,7 +257,7 @@ function VendorHeader({
           <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#9aa3ae]">
             <span className="flex items-center gap-1">
               <Star size={13} className="fill-[#f2a93b] text-[#f2a93b]" />
-              {vendor.rating.toFixed(1)}
+              {vendor.rating ? vendor.rating.toFixed(1) : "0.0"}
             </span>
             <span className="flex items-center gap-1">
               <Clock size={13} />
@@ -283,7 +283,7 @@ function VendorHeader({
           <p className="text-xs text-[#9aa3ae]">This month</p>
           <p className="flex items-center justify-end gap-0.5 text-sm font-semibold text-white">
             <IndianRupee size={13} />
-            {vendor.monthlyRevenue.toLocaleString("en-IN")}
+            {((vendor.monthlyRevenue) ?? 0).toLocaleString("en-IN")}
           </p>
         </div>
 

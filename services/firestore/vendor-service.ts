@@ -13,11 +13,11 @@ import { Vendor } from "@/types/vendor";
 
 
 
-// STUDENT: get vendors, optionally filtering to only active entries.
-export async function getVendors(activeOnly = true) {
+// STUDENT: get vendors, optionally filtering to only open entries.
+export async function getVendors(openOnly = true) {
   const vendorCollection = collection(db, "vendors");
-  const q = activeOnly
-    ? query(vendorCollection, where("active", "==", true))
+  const q = openOnly
+    ? query(vendorCollection, where("status", "==", "open"))
     : query(vendorCollection);
 
   const snapshot = await getDocs(q);

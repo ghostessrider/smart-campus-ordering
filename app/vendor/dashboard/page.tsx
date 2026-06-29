@@ -14,6 +14,7 @@ import {
   IndianRupee,
   History,
   Ban,
+  User,
 } from "lucide-react";
 
 import {
@@ -61,6 +62,7 @@ export default function VendorDashboard() {
   const [togglingStore, setTogglingStore] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VendorOrder | null>(null);
   const [showClosedLog, setShowClosedLog] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
@@ -152,6 +154,12 @@ export default function VendorDashboard() {
     event.preventDefault();
     if (!vendor) return;
 
+    // Edit B — Validation Entry Block guard
+    if (profileForm.phone.length > 0 && profileForm.phone.length !== 10) {
+      setProfileMessage("Phone number must be exactly 10 digits.");
+      return;
+    }
+
     setProfileSaving(true);
     setProfileMessage(null);
 
@@ -211,9 +219,11 @@ export default function VendorDashboard() {
           onToggleStore={handleToggleStore}
           closedLogCount={closedLog.length}
           onShowClosedLog={() => setShowClosedLog(true)}
+          onShowProfile={() => setShowProfile(true)}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-5 xl:grid-cols-[1.45fr_0.95fr]">
+        {/* Edit A — Streamlined Layout Grid Transformation */}
+        {/* <div className="mt-8">
           <VendorProfileCard
             vendor={vendor}
             profileForm={profileForm}
@@ -223,58 +233,55 @@ export default function VendorDashboard() {
             onImageChange={setProfileImageFile}
             onSubmit={handleSaveProfile}
           />
+        </div> */}
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 xl:grid-cols-1">
-          <OrderColumn
-            column="incoming"
-            orders={incoming}
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <OrderColumn 
+            column="incoming" 
+            orders={incoming} 
             renderActions={(order) => (
               <div className="flex gap-2.5">
-                <button
-                  onClick={() => handleAccept(order)}
+                <button 
+                  onClick={() => handleAccept(order)} 
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#f2a93b] py-2.5 text-sm font-semibold text-[#1a1304] transition-colors hover:bg-[#f5b85c]"
                 >
-                  <Check size={15} strokeWidth={2.25} />
-                  Accept
+                  <Check size={15} strokeWidth={2.25} /> Accept
                 </button>
-                <button
-                  onClick={() => setRejectTarget(order)}
+                <button 
+                  onClick={() => setRejectTarget(order)} 
                   className="flex items-center justify-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/20"
                 >
                   <X size={15} strokeWidth={2.25} />
                 </button>
               </div>
-            )}
+            )} 
           />
-
-          <OrderColumn
-            column="preparing"
-            orders={preparing}
+          
+          <OrderColumn 
+            column="preparing" 
+            orders={preparing} 
             renderActions={(order) => (
-              <button
-                onClick={() => handleMarkReady(order)}
+              <button 
+                onClick={() => handleMarkReady(order)} 
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#5b9dff] py-2.5 text-sm font-semibold text-[#0c1a33] transition-colors hover:bg-[#7badff]"
               >
-                <PackageCheck size={15} strokeWidth={2.25} />
-                Ready for pickup
+                <PackageCheck size={15} strokeWidth={2.25} /> Ready for pickup
               </button>
-            )}
+            )} 
           />
-
-          <OrderColumn
-            column="ready"
-            orders={ready}
+          
+          <OrderColumn 
+            column="ready" 
+            orders={ready} 
             renderActions={(order) => (
-              <button
-                onClick={() => handleMarkDelivered(order)}
+              <button 
+                onClick={() => handleMarkDelivered(order)} 
                 className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#3ddc84] py-2.5 text-sm font-semibold text-[#06281a] transition-colors hover:bg-[#5ee69c]"
               >
-                <Check size={15} strokeWidth={2.25} />
-                Mark delivered
+                <Check size={15} strokeWidth={2.25} /> Mark delivered
               </button>
-            )}
+            )} 
           />
-        </div>
         </div>
       </div>
 
@@ -292,7 +299,43 @@ export default function VendorDashboard() {
           onClose={() => setShowClosedLog(false)}
         />
       )}
+
+      {showProfile && (
+        <ProfileModal onClose={() => setShowProfile(false)}>
+          <VendorProfileCard
+            vendor={vendor}
+            profileForm={profileForm}
+            profileMessage={profileMessage}
+            profileSaving={profileSaving}
+            onFormChange={setProfileForm}
+            onImageChange={setProfileImageFile}
+            onSubmit={handleSaveProfile}
+          />
+        </ProfileModal>
+      )}
     </main>
+  );
+}
+
+function ProfileModal({
+  onClose,
+  children,
+}: {
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-6 py-10 overflow-y-auto">
+      <div className="relative w-full max-w-lg">
+        <button
+          onClick={onClose}
+          className="absolute -top-2 right-0 z-10 translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-[#12151a] p-1.5 text-[#9aa3ae] hover:bg-white/10 hover:text-white"
+        >
+          <X size={16} />
+        </button>
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -333,15 +376,25 @@ function VendorProfileCard({
           />
         </label>
 
+        {/* Edit C — Interactive Filtered Phone Label Markup */}
         <label className="block">
           <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-[#9aa3ae]">Phone</span>
           <input
             type="tel"
+            inputMode="numeric"
             value={profileForm.phone}
-            onChange={(event) => onFormChange((prev) => ({ ...prev, phone: event.target.value }))}
+            onChange={(event) => {
+              const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 10);
+              onFormChange((prev) => ({ ...prev, phone: digitsOnly }));
+            }}
             placeholder="9876543210"
             className="w-full rounded-xl border border-white/10 bg-[#0b0d10] px-4 py-3 text-sm text-white outline-none transition focus:border-[#f2a93b]"
           />
+          {profileForm.phone.length > 0 && profileForm.phone.length !== 10 && (
+            <span className="mt-1.5 block text-xs text-amber-400/80">
+              Phone number must be exactly 10 digits.
+            </span>
+          )}
         </label>
 
         <label className="block">
@@ -393,98 +446,132 @@ function VendorHeader({
   onToggleStore,
   closedLogCount,
   onShowClosedLog,
+  onShowProfile,
 }: {
   vendor: Vendor;
   toggling: boolean;
   onToggleStore: () => void;
   closedLogCount: number;
   onShowClosedLog: () => void;
+  onShowProfile: () => void;
 }) {
   const isOpen = vendor.status === "open";
 
   return (
-    <div className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-[#12151a] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
-          <StoreIcon size={22} strokeWidth={1.75} className="text-[#9aa3ae]" />
-        </div>
-        <div>
-          <h1 className="text-lg font-semibold text-white">{vendor.name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#9aa3ae]">
-            <span className="flex items-center gap-1">
-              <Star size={13} className="fill-[#f2a93b] text-[#f2a93b]" />
-              {vendor.rating ? vendor.rating.toFixed(1) : "0.0"}
-            </span>
-            <span className="flex items-center gap-1">
-              <Clock size={13} />
-              Rating {vendor.rating ? vendor.rating.toFixed(1) : "0.0"}
-            </span>
-            {vendor.upiID ? (
-              <span className="flex items-center gap-1 font-mono">
-                <Wallet size={13} />
-                {vendor.upiID}
+  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#12151a]">
+    {vendor.image && (
+      <>
+        <div
+          className="absolute inset-0 scale-110 bg-cover bg-center opacity-30 blur-3xl"
+          style={{ backgroundImage: `url(${vendor.image})` }}
+        />
+        <div className="absolute inset-0 bg-[#12151a]/80" />
+      </>
+    )}
+
+      <div className="relative flex flex-col gap-5 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
+            <StoreIcon size={22} strokeWidth={1.75} className="text-[#9aa3ae]" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold text-white">{vendor.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#9aa3ae]">
+              <span className="flex items-center gap-1">
+                <Star size={13} className="fill-[#f2a93b] text-[#f2a93b]" />
+                {vendor.rating ? vendor.rating.toFixed(1) : "0.0"}
               </span>
-            ) : (
-              <span className="flex items-center gap-1 text-amber-400/80">
-                <Wallet size={13} />
-                UPI ID not set — payments will be hard to reconcile
+              <span className="flex items-center gap-1">
+                <Clock size={13} />
+                ~{vendor.avgPrepTime} min prep
               </span>
-            )}
+              {vendor.upiID ? (
+                <span className="flex items-center gap-1 font-mono">
+                  <Wallet size={13} />
+                  {vendor.upiID}
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-amber-400/80">
+                  <Wallet size={13} />
+                  UPI ID not set — payments will be hard to reconcile
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <p className="text-xs text-[#9aa3ae]">This month</p>
-          <p className="flex items-center justify-end gap-0.5 text-sm font-semibold text-white">
-            <IndianRupee size={13} />
-            {(vendor.earning ?? 0).toLocaleString("en-IN")}
-          </p>
-        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-xs text-[#9aa3ae]">This month</p>
+            <p className="flex items-center justify-end gap-0.5 text-sm font-semibold text-white">
+              <IndianRupee size={13} />
+              {(vendor.earning ?? 0).toLocaleString("en-IN")}
+            </p>
+          </div>
+          <div className="h-11 w-11 overflow-hidden rounded-full border border-white/10 bg-white/5">
+            {vendor.image ? (
+              <img
+                src={vendor.image}
+                alt={vendor.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <User size={18} className="text-[#9aa3ae]" />
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onShowProfile}
+            className="flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-[#9aa3ae] transition-colors hover:bg-white/15 hover:text-white"
+          >
+            <User size={14} strokeWidth={1.75} />
+              Profile
+          </button>
+          
+          <button
+            onClick={onShowClosedLog}
+            className="flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-[#9aa3ae] transition-colors hover:bg-white/15 hover:text-white"
+          >
+            <History size={14} strokeWidth={1.75} />
+            Delivered / rejected
+            {closedLogCount > 0 && (
+              <span className="rounded-full bg-white/15 px-1.5 text-[10px]">
+                {closedLogCount}
+              </span>
+            )}
+          </button>
 
-        <button
-          onClick={onShowClosedLog}
-          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-2 text-xs font-semibold text-[#9aa3ae] transition-colors hover:bg-white/15 hover:text-white"
-        >
-          <History size={14} strokeWidth={1.75} />
-          Delivered / rejected
-          {closedLogCount > 0 && (
-            <span className="rounded-full bg-white/15 px-1.5 text-[10px]">
-              {closedLogCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={onToggleStore}
-          disabled={toggling}
-          aria-pressed={isOpen}
-          className={clsx(
-            "flex items-center gap-3 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
-            isOpen
-              ? "border-[#3ddc84]/30 bg-[#3ddc84]/15 text-[#3ddc84] hover:bg-[#3ddc84]/25"
-              : "border-white/10 bg-white/10 text-[#9aa3ae] hover:bg-white/15"
-          )}
-        >
-          <span className="text-[10px] uppercase tracking-[0.24em] text-[#9aa3ae]">
-            Store
-          </span>
-          <span
+          <button
+            onClick={onToggleStore}
+            disabled={toggling}
+            aria-pressed={isOpen}
             className={clsx(
-              "relative flex h-6 w-11 items-center rounded-full transition-colors",
-              isOpen ? "bg-[#3ddc84]/25" : "bg-white/15"
+              "flex items-center gap-3 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors disabled:opacity-60",
+              isOpen
+                ? "border-[#3ddc84]/30 bg-[#3ddc84]/15 text-[#3ddc84] hover:bg-[#3ddc84]/25"
+                : "border-white/10 bg-white/10 text-[#9aa3ae] hover:bg-white/15"
             )}
           >
+            <span className="text-[10px] uppercase tracking-[0.24em] text-[#9aa3ae]">
+              Store
+            </span>
             <span
               className={clsx(
-                "absolute h-5 w-5 rounded-full border border-white/20 bg-white shadow-sm transition-transform",
-                isOpen ? "translate-x-6" : "translate-x-1"
+                "relative flex h-6 w-11 items-center rounded-full transition-colors",
+                isOpen ? "bg-[#3ddc84]/25" : "bg-white/15"
               )}
-            />
-          </span>
-          <span>{toggling ? "Updating…" : isOpen ? "Open" : "Closed"}</span>
-        </button>
+            >
+              <span
+                className={clsx(
+                  "absolute h-5 w-5 rounded-full border border-white/20 bg-white shadow-sm transition-transform",
+                  isOpen ? "translate-x-6" : "translate-x-1"
+                )}
+              />
+            </span>
+            <span>{toggling ? "Updating…" : isOpen ? "Open" : "Closed"}</span>
+          </button>
+        </div>
       </div>
     </div>
   );

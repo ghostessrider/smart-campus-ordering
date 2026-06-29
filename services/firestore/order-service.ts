@@ -344,6 +344,19 @@ export async function updateOrderStatus(
   await updateDoc(ref, updateData);
 }
 
+// New: Update payment status for an order
+export async function updatePaymentStatus(
+  orderId: string,
+  paymentStatus: string
+) {
+  const ref = doc(db, "orders", orderId);
+  const updateData = {
+    paymentStatus,
+    updatedAt: serverTimestamp(),
+  };
+  await updateDoc(ref, updateData);
+}
+
 // VENDOR: reject a pending order with a required reason.
 // Kept separate from updateOrderStatus since rejection always needs
 // rejectionReason — this is enforced here, not left optional.

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Order, OrderStatus, PaymentStatus, Vendor } from '../types';
+import { listenToVendorOrders } from '@/services/firestore/order-service';
 
 interface VendorOrdersViewProps {
   vendorId: string;
@@ -8,47 +9,34 @@ interface VendorOrdersViewProps {
   onBack: () => void;
 }
 
-// Generate some mock orders for demonstration purposes
-const generateMockOrders = (vendorId: string, count: number): Order[] => {
-  const statuses = Object.values(OrderStatus);
-  const paymentStatuses = Object.values(PaymentStatus);
-  const items = [
-    { id: '1', name: 'Burger Combo', quantity: 1, price: 15.99 },
-    { id: '2', name: 'Spicy Ramen', quantity: 2, price: 12.50 },
-    { id: '3', name: 'Cold Brew Coffee', quantity: 1, price: 4.50 },
-    { id: '4', name: 'Margherita Pizza', quantity: 1, price: 18.00 },
-  ];
-
-  return Array.from({ length: count }).map((_, i) => {
-    const orderItems = [items[Math.floor(Math.random() * items.length)]];
-    const totalAmount = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    return {
-      id: `ORD-${vendorId.substring(0, 3)}-${1000 + i}`,
-      vendorId,
-      customerName: `Student ${Math.floor(Math.random() * 1000)}`,
-      customerId: `STU${10000 + i}`,
-      items: orderItems,
-      totalAmount,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      paymentStatus: paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)],
-      createdAt: new Date(Date.now() - Math.random() * 1000000000).toISOString(),
-    };
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-};
-
 export default function VendorOrdersView({ vendorId, vendorName, onBack }: VendorOrdersViewProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate an API fetch
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setOrders(generateMockOrders(vendorId, 15));
+    const unsubscribe = listenToVendorOrders(vendorId, (vendorOrders) => {
+      const formattedOrders: Order[] = vendorOrders.map((o) => ({
+        id: o.id,
+        vendorId: o.vendorId,
+        customerName: `Student (${o.userId.substring(0, 4)})`, // Using ID snippet as name for now
+        customerId: o.userId,
+        items: o.items as any,
+        totalAmount: o.total,
+        status: o.status as OrderStatus,
+        paymentStatus: (o.paymentStatus as PaymentStatus) || PaymentStatus.PENDING,
+        createdAt: (o.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+      }));
+      
+      // Sort by newest first
+      formattedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setOrders(formattedOrders);
       setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    });
+
+    return () => unsubscribe();
   }, [vendorId]);
 
   const filteredOrders = orders.filter(o => 

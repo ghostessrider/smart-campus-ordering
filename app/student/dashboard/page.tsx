@@ -1,5 +1,7 @@
 "use client";
 
+
+import Cart from "@/components/Cart/Cart";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, MapPin } from "lucide-react";
@@ -37,6 +39,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   useEffect(() => {
     async function loadVendors() {
@@ -60,7 +63,7 @@ export default function StudentDashboard() {
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
           backgroundImage:
-            "linear-gradient(#9aa3ae 1px, transparent 1px), linear-gradient(90deg, #9aa3ae 1px, transparent 1px)",
+            "linear-gradient(#9aa3ae 1px, transparent 1px), linear-gradient(90deg, #929faf 1px, transparent 1px)",
           backgroundSize: "44px 44px",
         }}
       />
@@ -76,7 +79,7 @@ export default function StudentDashboard() {
                 <CowIcon className="h-4 w-4" />
                 {APP_NAME}
               </div>
-              <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+              <h1 className="text-4xl font-semibold tracking-tight text-[#f2a93b] sm:text-5xl">
                 Find campus vendors and place your next meal order.
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
@@ -93,13 +96,15 @@ export default function StudentDashboard() {
                 {showAll ? <EyeOff size={16} /> : <Eye size={16} />}
                 {showAll ? "Show active vendors" : "Show all vendors"}
               </button>
-              <Link
-                href="/student/orders"
-                className="inline-flex items-center justify-center gap-2 rounded-3xl bg-[#f2a93b] px-5 py-3 text-sm font-semibold text-[#1a1304] transition hover:bg-[#f5b85c]"
-              >
-                <ArrowRight size={18} />
-                View my orders
-              </Link>
+
+               <button
+                 type="button"
+                 onClick={() => setCartOpen(true)}
+                 className="inline-flex items-center justify-center gap-2 rounded-3xl bg-[#f2a93b] px-5 py-3 text-sm font-semibold text-[#1a1304] transition hover:bg-[#f5b85c]"
+               >
+                 <ArrowRight size={18} />
+                 View my orders
+               </button>
             </div>
           </div>
         </section>
@@ -157,6 +162,7 @@ export default function StudentDashboard() {
           </div>
         )}
       </main>
+      {cartOpen && <Cart onClose={() => setCartOpen(false)} />}
     </div>
   );
 }

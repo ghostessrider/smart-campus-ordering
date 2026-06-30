@@ -12,7 +12,7 @@ export default function Navbar({ showBack }: StudentNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="border-b bg-white">
+    <nav className="border-b bg-black">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
             {showBack ? (

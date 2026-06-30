@@ -8,11 +8,28 @@ export type CartItem = {
 let cart: CartItem[] = [];
 let selectedVendorId: string | null = null;
 
+// Listener management for external store subscribers
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+function notifyListeners() {
+  listeners.forEach((listener) => listener());
+}
+
+export function subscribe(listener: Listener) {
+  listeners.add(listener);
+  // Return an unsubscribe function
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
 export function setCartVendorId(vendorId: string) {
   if (selectedVendorId && selectedVendorId !== vendorId && cart.length > 0) {
     cart = [];
   }
   selectedVendorId = vendorId;
+  notifyListeners();
 }
 
 export function getCartVendorId() {
@@ -27,6 +44,7 @@ export function addToCart(item: CartItem) {
   } else {
     cart.push(item);
   }
+  notifyListeners();
 }
 
 export function updateCartQuantity(itemId: string, quantity: number) {
@@ -34,6 +52,7 @@ export function updateCartQuantity(itemId: string, quantity: number) {
 
   if (item) {
     item.quantity = Math.max(1, quantity);
+    notifyListeners();
   }
 }
 
@@ -42,6 +61,7 @@ export function removeCartItem(itemId: string) {
   if (cart.length === 0) {
     selectedVendorId = null;
   }
+  notifyListeners();
 }
 
 export function getCart() {
@@ -51,4 +71,5 @@ export function getCart() {
 export function clearCart() {
   cart = [];
   selectedVendorId = null;
+  notifyListeners();
 }

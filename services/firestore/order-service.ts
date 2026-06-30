@@ -391,3 +391,19 @@ export function listenToVendorOrders(
 
   return unsubscribe;
 }
+
+export function listenToStudentOrders(
+  userId: string,
+  callback: (orders: VendorOrder[]) => void
+) {
+  const q = query(collection(db, "orders"), where("userId", "==", userId));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const orders = snapshot.docs.map((order) => ({
+      id: order.id,
+      ...order.data(),
+    })) as VendorOrder[];
+    callback(orders);
+  });
+
+  return unsubscribe;
+}

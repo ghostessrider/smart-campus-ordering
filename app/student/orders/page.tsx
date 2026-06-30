@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, FileText, Star } from "lucide-react";
+import { Clock, FileText, Star, CreditCard } from "lucide-react";
 import { auth } from "@/lib/firebase/auth";
-import { getStudentOrders } from "@/services/firestore/order-service";
+import { listenToStudentOrders } from "@/services/firestore/order-service";
 import { getVendorById } from "@/services/firestore/vendor-service";
 import { getVendorMenuItems } from "@/services/firestore/menu-service";
 import { VendorOrder } from "@/types/order";
@@ -20,76 +20,141 @@ export default function StudentOrdersPage() {
   const [feedbackMap, setFeedbackMap] = useState<Record<string, { rating?: number; comment?: string } | null>>({});
   const [formState, setFormState] = useState<Record<string, { rating: number; comment: string; submitting?: boolean; error?: string }>>({});
 
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const [payError, setPayError] = useState<string | null>(null);
+
+  // Load Razorpay script once
+  useEffect(() => {
+    const loadScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      document.body.appendChild(script);
+    };
+    if (!(window as any).Razorpay) loadScript();
+  }, []);
+
+  const handlePay = async (order: VendorOrder) => {
+    setPayError(null);
+    setPayingOrderId(order.id);
+    try {
+      // Create Razorpay order via backend
+      const res = await fetch('/api/razorpay/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: order.total, orderId: order.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create Razorpay order');
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_T7Wl5quWf15frz',
+        amount: Math.round(order.total * 100),
+        currency: 'INR',
+        name: 'Smart Campus Ordering',
+        description: `Order #${order.orderNumber ?? order.id}`,
+        order_id: data.order_id,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch('/api/razorpay/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                firebase_order_id: order.id
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) throw new Error(verifyData.error || 'Payment verification failed');
+            // Real-time listener will update the UI automatically
+            setPayingOrderId(null);
+          } catch (err: any) {
+            setPayError(err.message || 'Payment verification failed');
+            setPayingOrderId(null);
+          }
+        },
+        prefill: {
+          email: auth.currentUser?.email || ''
+        },
+        theme: {
+          color: '#34c759'
+        }
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setPayError(response.error.description);
+        setPayingOrderId(null);
+      });
+      rzp.open();
+    } catch (e) {
+      setPayError(e instanceof Error ? e.message : 'Payment initialization failed');
+      setPayingOrderId(null);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
-      setLoading(true);
-      setError(null);
-
-      const user = auth.currentUser;
-      if (!user) {
-        setError("Please sign in to view your orders.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const fetched = (await getStudentOrders(user.uid)) as VendorOrder[];
-        if (!mounted) return;
-        setOrders(fetched);
-
-        // preload vendor names and menu avg prep times per vendor
-        const vendorIds = Array.from(new Set(fetched.map((o) => o.vendorId)));
-
-        const names: Record<string, string> = {};
-        const avgMap: Record<string, Record<string, number>> = {};
-          const fbMap: Record<string, { rating?: number; comment?: string } | null> = {};
-
-        await Promise.all(
-          vendorIds.map(async (vid) => {
-            const v = await getVendorById(vid);
-            names[vid] = v?.name ?? vid;
-
-            const items = await getVendorMenuItems(vid);
-            const map: Record<string, number> = {};
-            for (const it of items) {
-              if (it.avgPrepTime !== undefined) map[it.id] = it.avgPrepTime;
-            }
-            avgMap[vid] = map;
-          })
-        );
-
-          // preload feedback existence for completed or delivered orders
-          await Promise.all(
-            fetched.map(async (o) => {
-              if (o.status === "completed" || o.status === "delivered") {
-                try {
-                  const mod = await import("@/services/firestore/feedback-service");
-                  const fbMod = (await mod.getFeedbackByOrderId(o.id)) as { rating?: number; comment?: string } | null;
-                  if (fbMod) fbMap[o.id] = fbMod;
-                } catch {
-                  // ignore — we handle missing feedback by absence
-                }
-              }
-            })
-          );
-
-        if (!mounted) return;
-        setVendorNames(names);
-        setMenuAvgMap(avgMap);
-          setFeedbackMap(fbMap);
-      } catch (err) {
-        setError((err instanceof Error && err.message) || "Unable to load orders.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    const user = auth.currentUser;
+    if (!user) {
+      setError("Please sign in to view your orders.");
+      setLoading(false);
+      return;
     }
 
-    void load();
+    // Real-time listener for student orders
+    const unsubscribe = listenToStudentOrders(user.uid, async (fetched) => {
+      if (!mounted) return;
+      setOrders(fetched);
+      setLoading(false);
+
+      // preload vendor names and menu avg prep times per vendor
+      const vendorIds = Array.from(new Set(fetched.map((o) => o.vendorId)));
+
+      const names: Record<string, string> = {};
+      const avgMap: Record<string, Record<string, number>> = {};
+      const fbMap: Record<string, { rating?: number; comment?: string } | null> = {};
+
+      await Promise.all(
+        vendorIds.map(async (vid) => {
+          const v = await getVendorById(vid);
+          names[vid] = v?.name ?? vid;
+
+          const items = await getVendorMenuItems(vid);
+          const map: Record<string, number> = {};
+          for (const it of items) {
+            if (it.avgPrepTime !== undefined) map[it.id] = it.avgPrepTime;
+          }
+          avgMap[vid] = map;
+        })
+      );
+
+      // preload feedback existence for completed or delivered orders
+      await Promise.all(
+        fetched.map(async (o) => {
+          if (o.status === "completed" || o.status === "delivered") {
+            try {
+              const mod = await import("@/services/firestore/feedback-service");
+              const fbMod = (await mod.getFeedbackByOrderId(o.id)) as { rating?: number; comment?: string } | null;
+              if (fbMod) fbMap[o.id] = fbMod;
+            } catch {
+              // ignore — we handle missing feedback by absence
+            }
+          }
+        })
+      );
+
+      if (!mounted) return;
+      setVendorNames(names);
+      setMenuAvgMap(avgMap);
+      setFeedbackMap(fbMap);
+    });
 
     return () => {
       mounted = false;
+      unsubscribe();
     };
   }, []);
 
@@ -134,7 +199,7 @@ export default function StudentOrdersPage() {
                     <div className="text-sm text-slate-400">Order #{order.orderNumber ?? order.id}</div>
                     <div className="mt-1 text-lg font-semibold">{vendorNames[order.vendorId] ?? order.vendorId}</div>
                   </div>
-                  <div className="text-sm text-slate-400">Status: <span className="font-semibold text-white">{order.status}</span></div>
+                  <div className="text-sm text-slate-400">Status: <span className="font-semibold text-white">{order.status}</span> | Payment: <span className="font-semibold text-white">{order.paymentStatus ?? "N/A"}</span></div>
                 </div>
 
                 <div className="mt-4 border-t border-slate-800 pt-4">
@@ -158,6 +223,33 @@ export default function StudentOrdersPage() {
                     <div className="text-lg font-semibold">Total ₹{order.total}</div>
                   </div>
                 </div>
+
+                {/* Pay Now button — only shows when vendor accepted and payment is not yet done */}
+                {order.status === "accepted" && order.paymentStatus !== "paid" && (
+                  <div className="mt-4 border-t border-slate-800 pt-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-emerald-300">Vendor has accepted your order! Please complete payment.</p>
+                      <button
+                        onClick={() => handlePay(order)}
+                        disabled={payingOrderId === order.id}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold text-sm hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <CreditCard className="h-4 w-4" />
+                        {payingOrderId === order.id ? 'Processing…' : 'Pay Now'}
+                      </button>
+                    </div>
+                    {payError && payingOrderId === null && (
+                      <p className="mt-2 text-sm text-rose-400">{payError}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Payment completed badge */}
+                {order.paymentStatus === "paid" && (
+                  <div className="mt-4 border-t border-slate-800 pt-4">
+                    <p className="text-sm text-emerald-400 font-semibold">✅ Payment Completed</p>
+                  </div>
+                )}
 
                 {(order.status === "completed" || order.status === "delivered") && (
                   <div className="mt-4 border-t border-slate-800 pt-4">

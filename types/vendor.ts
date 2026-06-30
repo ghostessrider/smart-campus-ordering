@@ -19,6 +19,7 @@ export interface Vendor {
   upiID: string;
   status: "open" | "closed";
   rating: number;
+  avgPrepTime?: number;
   queueNumber: number;
   totalOrders: number;
   earning: number;

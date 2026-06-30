@@ -392,7 +392,13 @@ function MenuItemEditor({
     const finalCategory = isNewCategory ? customCategory : category;
     const parsedPrice = Number(price);
 
-    if (!name.trim() || !finalCategory.trim() || !parsedPrice || parsedPrice <= 0) {
+    const isValidPrice =
+      price.trim() !== "" &&
+      Number.isFinite(parsedPrice) &&
+      Number.isInteger(parsedPrice) &&
+      parsedPrice >= 0;
+
+    if (!name.trim() || !finalCategory.trim() || !isValidPrice) {
       return;
     }
 
@@ -449,11 +455,11 @@ function MenuItemEditor({
 
           <Field label="Price (₹)">
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => setPrice(e.target.value.replace(/\D/g, ""))}
               placeholder="50"
-              min={1}
               className="w-full rounded-lg border border-white/10 bg-[#0b0d10] px-3.5 py-2.5 text-sm text-white placeholder:text-[#9aa3ae]/50 focus:border-[#f2a93b]/50 focus:outline-none"
             />
           </Field>

@@ -222,8 +222,16 @@ export async function deleteVendorCategory(vendorId: string, name: string) {
 /**
  * Uploads an image file to Cloudinary and returns the public URL.
  */
-export async function uploadMenuItemImage(file: File, vendorId: string): Promise<string> {
-  return uploadImage(file, `menuItems/${vendorId}`);
+export async function uploadMenuItemImage(
+  file: File,
+  vendorId: string,
+  itemId?: string
+): Promise<string> {
+  return uploadImage(
+    file,
+    itemId ? `menuItems/${vendorId}/${itemId}` : `menuItems/${vendorId}`,
+    itemId ? `menuItems/${vendorId}/${itemId}` : undefined
+  );
 }
 
 /**

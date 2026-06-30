@@ -170,7 +170,11 @@ export default function VendorDashboard() {
         if (profileImageFile.size > 500 * 1024) {
           throw new Error("Image must be under 500 KB.");
         }
-        imageUrl = await uploadImage(profileImageFile, `vendors/${vendor.id}`);
+        imageUrl = await uploadImage(
+          profileImageFile,
+          `vendors/${vendor.id}`,
+          `vendors/${vendor.id}/profile`
+        );
       }
 
       const updates = {

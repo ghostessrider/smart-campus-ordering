@@ -115,7 +115,7 @@ export default function VendorMenuPage() {
     } else if (editingItem) {
       let imageUrl: string | undefined;
       if (imageFile) {
-        imageUrl = await uploadMenuItemImage(imageFile, vendor.id);
+        imageUrl = await uploadMenuItemImage(imageFile, vendor.id, editingItem.id);
       }
 
       await updateMenuItem(
@@ -147,8 +147,6 @@ export default function VendorMenuPage() {
       // } else {
       //   await updateMenuItem(editingItem.id, values);
       // }
-
-      await updateMenuItem(editingItem.id, values);
     }
 
     setEditingItem(null);

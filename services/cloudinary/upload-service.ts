@@ -14,17 +14,15 @@ export async function uploadImage(
   );
 
 
-  formData.append(
-    "upload_preset",
-    process.env
-      .NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-  );
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET?.trim();
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim();
 
+  if (!uploadPreset || !cloudName) {
+    throw new Error("Cloudinary configuration missing! Check your Vercel/Firebase environment variables.");
+  }
 
-  formData.append(
-    "folder",
-    folder
-  );
+  formData.append("upload_preset", uploadPreset);
+  formData.append("folder", folder);
 
 
   if (publicId) {
@@ -35,10 +33,7 @@ export async function uploadImage(
 
   const response =
     await fetch(
-      `https://api.cloudinary.com/v1_1/${
-        process.env
-          .NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-      }/image/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
       {
         method: "POST",
         body: formData

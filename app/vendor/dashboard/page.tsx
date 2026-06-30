@@ -172,8 +172,7 @@ export default function VendorDashboard() {
         }
         imageUrl = await uploadImage(
           profileImageFile,
-          `vendors/${vendor.id}`,
-          `vendors/${vendor.id}/profile`
+          `vendors/${vendor.id}`
         );
       }
 

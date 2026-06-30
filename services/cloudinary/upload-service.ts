@@ -1,7 +1,6 @@
 export async function uploadImage(
   file: Blob | File,
-  folder: string,
-  publicId?: string
+  folder: string
 ): Promise<string> {
 
 
@@ -25,10 +24,7 @@ export async function uploadImage(
   formData.append("folder", folder);
 
 
-  if (publicId) {
-    formData.append("public_id", publicId);
-    formData.append("overwrite", "true");
-  }
+
 
 
   const response =

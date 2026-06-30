@@ -229,8 +229,7 @@ export async function uploadMenuItemImage(
 ): Promise<string> {
   return uploadImage(
     file,
-    itemId ? `menuItems/${vendorId}/${itemId}` : `menuItems/${vendorId}`,
-    itemId ? `menuItems/${vendorId}/${itemId}` : undefined
+    itemId ? `menuItems/${vendorId}/${itemId}` : `menuItems/${vendorId}`
   );
 }
 

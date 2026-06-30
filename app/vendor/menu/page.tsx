@@ -144,11 +144,8 @@ export default function VendorMenuPage() {
       //   setPendingNotice(
       //     `Price change for "${values.name}" sent for admin approval. Other changes saved.`
       //   );
-      // } else {
       //   await updateMenuItem(editingItem.id, values);
       // }
-
-      await updateMenuItem(editingItem.id, values);
     }
 
     setEditingItem(null);

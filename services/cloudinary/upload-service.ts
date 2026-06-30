@@ -39,12 +39,16 @@ export async function uploadImage(
     );
 
 
-  if(!response.ok){
-
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "Could not read body");
+    console.error(`Cloudinary error ${response.status} ${response.statusText}:`, errorText);
+    
+    let parsed = null;
+    try { parsed = JSON.parse(errorText); } catch(e) {}
+    
     throw new Error(
-      "Cloudinary upload failed"
+      parsed?.error?.message || `Cloudinary upload failed: ${response.status} ${response.statusText}`
     );
-
   }
 
 

@@ -22,8 +22,15 @@ Open http://localhost:3000.
 
 ## Scripts
 
+<<<<<<< HEAD
 - `npm run dev` build for production
 - `npm run start` run ESLint
+=======
+- `npm run dev` — start Next.js in development
+- `npm run build` — build for production
+- `npm run start` — start the production server
+- `npm run lint` — run ESLint
+>>>>>>> 8ff1fd0 (new readme)
 
 See `package.json` for versions and dependency list.
 
@@ -64,7 +71,12 @@ Notes:
 
 There are a couple of server routes under `app/api/admin/`:
 
+<<<<<<< HEAD
 - `app/api/admin/create-vendor/route.ts` vendor deletion endpoint.
+=======
+- `app/api/admin/create-vendor/route.ts` — vendor registration endpoint used by admin UI.
+- `app/api/admin/delete-vendor/route.ts` — vendor deletion endpoint.
+>>>>>>> 8ff1fd0 (new readme)
 
 ## Running checks
 

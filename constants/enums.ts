@@ -9,6 +9,7 @@ export type UserRole =
 // an earlier pass and have been reverted everywhere.
 export type OrderStatus =
   | "pending"
+  | "pending_confirmation"
   | "accepted"
   | "completed"
   | "delivered"

@@ -28,7 +28,7 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
       script.async = true;
       document.body.appendChild(script);
     };
-    if (!window.Razorpay) loadScript();
+    if (!(window as any).Razorpay) loadScript();
     const unsubscribe = subscribe(() => setItems([...getCart()]));
     return () => unsubscribe();
   }, []);

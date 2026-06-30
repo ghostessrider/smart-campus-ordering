@@ -34,6 +34,7 @@ export default function Navbar({ showBack }: StudentNavbarProps) {
           <div className="hidden gap-6 md:flex">
             <Link href="/">Home</Link>
             <Link href="/student/dashboard">Student</Link>
+            <Link href="/student/orders">Orders</Link>
         </div>
 
         <button
@@ -48,6 +49,7 @@ export default function Navbar({ showBack }: StudentNavbarProps) {
         <div className="flex flex-col gap-3 border-t px-4 py-4 md:hidden">
           <Link href="/">Home</Link>
           <Link href="/student">Student</Link>
+          <Link href="/student/orders">Orders</Link>
           <Link href="/vendor">Vendor</Link>
         </div>
       )}

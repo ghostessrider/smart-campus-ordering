@@ -1,72 +1,27 @@
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getCartVendorId, updateCartQuantity, removeCartItem } from "@/services/cart/cart-store";
-import { createOrder, updatePaymentStatus } from "@/services/firestore/order-service";
+import { createOrder } from "@/services/firestore/order-service";
 import { auth } from "@/lib/firebase/auth";
 import { getCart, clearCart, subscribe } from "@/services/cart/cart-store";
-
-// Razorpay will be loaded from the external script at runtime
-// Fake payment gateway – no external script needed
 
 interface CartProps {
   onClose: () => void;
 }
 
 const Cart: React.FC<CartProps> = ({ onClose }) => {
+  const router = useRouter();
   const [items, setItems] = useState(getCart());
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState("");
   const [pickupLocation, setPickupLocation] = useState("");
   const [orderError, setOrderError] = useState<string | null>(null);
-  const [orderCreated, setOrderCreated] = useState<boolean>(false);
-  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Load Razorpay script once
   useEffect(() => {
-    const loadScript = () => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      document.body.appendChild(script);
-    };
-    if (!(window as any).Razorpay) loadScript();
     const unsubscribe = subscribe(() => setItems([...getCart()]));
     return () => unsubscribe();
   }, []);
-
-  const handlePay = async () => {
-    if (!currentOrderId) {
-      setOrderError('Order ID missing.');
-      return;
-    }
-    try {
-      // Initialize Razorpay checkout using test mode
-      const options = {
-        key: 'rzp_test_T7Wl5quWf15frz', // Razorpay Test Key ID (test mode)
-        amount: Math.round(total * 100), // amount in paise
-        currency: 'INR',
-        name: 'Smart Campus Ordering',
-        description: `Order ${currentOrderId}`,
-        handler: async function (response: any) {
-          // Payment successful, update payment status in Firestore
-          await updatePaymentStatus(currentOrderId, 'paid');
-          clearCart();
-          setOrderCreated(false);
-          setCurrentOrderId(null);
-          onClose();
-        },
-        prefill: {
-          email: auth.currentUser?.email || ''
-        },
-        theme: {
-          color: '#34c759'
-        }
-      };
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (e) {
-      setOrderError(e instanceof Error ? e.message : 'Payment failed');
-    }
-  };
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
@@ -74,7 +29,25 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={onClose}>
       <div className="max-w-md w-full bg-[#12151a] text-slate-100 p-6 rounded-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <h2 className="text-xl font-semibold mb-4">Your Cart</h2>
-        {items.length === 0 ? (
+
+        {orderSuccess ? (
+          <div className="text-center py-6">
+            <div className="text-4xl mb-3">✅</div>
+            <h3 className="text-lg font-semibold text-emerald-400 mb-2">Order Placed Successfully!</h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Your order has been sent to the vendor for approval. Once accepted, you can pay from your <strong>Orders</strong> page.
+            </p>
+            <button
+              onClick={() => {
+                onClose();
+                router.push('/student/orders');
+              }}
+              className="w-full rounded-md bg-[#5b9dff] py-2 font-medium text-[#0c1a33] hover:bg-[#7badff]"
+            >
+              Go to My Orders
+            </button>
+          </div>
+        ) : items.length === 0 ? (
           <p className="text-sm text-slate-400">Your cart is currently empty.</p>
         ) : (
           <div>
@@ -91,14 +64,6 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
                     <span>₹{(item.price * item.quantity).toFixed(2)}</span>
                 </li>
               ))}
-              {orderCreated && (
-                <button
-                  onClick={handlePay}
-                  className="mt-2 w-full rounded-md bg-[#34c759] py-2 font-medium text-[#1a1304] hover:bg-[#4cd96e]"
-                >
-                  Pay Now
-                </button>
-              )}
             </ul>
             <div className="mt-4 border-t border-slate-700 pt-2 flex justify-between font-medium">
               <span>Total</span>
@@ -154,19 +119,18 @@ const Cart: React.FC<CartProps> = ({ onClose }) => {
                           const vendorId = getCartVendorId();
                           const userId = auth.currentUser?.uid;
                           if (!vendorId || !userId) throw new Error('Vendor or user not identified');
-                          const orderId = await createOrder({
+                          await createOrder({
                             vendorId,
                             userId,
                             items,
                             total,
-                            status: 'pending_confirmation',
+                            status: 'pending',
                             notes,
                             pickupLocation,
                           });
-                          setCurrentOrderId(orderId);
-                          setOrderCreated(true);
+                          clearCart();
                           setShowModal(false);
-                          // Cart will be cleared after successful payment.
+                          setOrderSuccess(true);
                         } catch (e) {
                           setOrderError(e instanceof Error ? e.message : 'Failed to place order');
                         }

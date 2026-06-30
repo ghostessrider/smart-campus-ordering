@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Clock, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 import { Order, OrderStatus, PaymentStatus, Vendor } from '../types';
+import { listenToVendorOrders } from '@/services/firestore/order-service';
 
 interface VendorOrdersViewProps {
   vendorId: string;
@@ -14,13 +15,28 @@ export default function VendorOrdersView({ vendorId, vendorName, onBack }: Vendo
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate an API fetch
     setIsLoading(true);
-    const timer = setTimeout(() => {
-      setOrders([]);
+    const unsubscribe = listenToVendorOrders(vendorId, (vendorOrders) => {
+      const formattedOrders: Order[] = vendorOrders.map((o) => ({
+        id: o.id,
+        vendorId: o.vendorId,
+        customerName: `Student (${o.userId.substring(0, 4)})`, // Using ID snippet as name for now
+        customerId: o.userId,
+        items: o.items as any,
+        totalAmount: o.total,
+        status: o.status as OrderStatus,
+        paymentStatus: (o.paymentStatus as PaymentStatus) || PaymentStatus.PENDING,
+        createdAt: (o.createdAt as any)?.toDate?.()?.toISOString() || new Date().toISOString(),
+      }));
+      
+      // Sort by newest first
+      formattedOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setOrders(formattedOrders);
       setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    });
+
+    return () => unsubscribe();
   }, [vendorId]);
 
   const filteredOrders = orders.filter(o => 

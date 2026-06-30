@@ -58,6 +58,7 @@ const COLUMN_META: Record<
 export default function VendorDashboard() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [orders, setOrders] = useState<VendorOrder[]>([]);
+
   const [loadingVendor, setLoadingVendor] = useState(true);
   const [togglingStore, setTogglingStore] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<VendorOrder | null>(null);

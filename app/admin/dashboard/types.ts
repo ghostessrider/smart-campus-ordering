@@ -25,8 +25,12 @@ export enum TabType {
 
 export enum OrderStatus {
   PENDING = 'pending',
+  PENDING_CONFIRMATION = 'pending_confirmation',
+  ACCEPTED = 'accepted',
   PREPARING = 'preparing',
   READY = 'ready',
+  COMPLETED = 'completed',
+  REJECTED = 'rejected',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
 }

@@ -11,7 +11,8 @@ export interface OrderGroup {
   id: string;
   userId: string;
   total: number;
-  createdAt: Date;
+  // Firestore Timestamp or JavaScript Date
+  createdAt: Date | any;
 }
 
 export interface VendorOrder {
@@ -25,9 +26,10 @@ export interface VendorOrder {
   paymentStatus?: string;
   paymentUTR?: string | null;
   rejectionReason?: string | null;
-  createdAt: Date;
-  updatedAt?: Date;
-  acceptedAt?: Date | null;
-  completedAt?: Date | null;
-  deliveredAt?: Date | null;
+  // Firestore Timestamp or JavaScript Date
+  createdAt: Date | any;
+  updatedAt?: Date | any;
+  acceptedAt?: Date | any;
+  completedAt?: Date | any;
+  deliveredAt?: Date | any;
 }
